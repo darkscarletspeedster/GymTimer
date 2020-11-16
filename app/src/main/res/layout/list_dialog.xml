@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="400sp"
+  android:layout_height="600sp"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:padding="@dimen/size_20"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:background="@drawable/progress_bar_bg">
+  <TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/titleText"
+    android:text="@string/select_timers"
+    android:textSize="@dimen/size_30"
+    android:textColor="@color/white"
+    android:background="@color/black"
+    android:paddingLeft="@dimen/size_10"
+    android:paddingRight="@dimen/size_10"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    />
+
+  <androidx.recyclerview.widget.RecyclerView
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:id="@+id/recyclerView"
+    android:layout_marginTop="@dimen/size_10"
+    android:layout_marginBottom="@dimen/size_10"
+    app:layout_constraintBottom_toTopOf="@+id/saveBtn"
+    app:layout_constraintTop_toBottomOf="@+id/titleText"
+    tools:listitem="@layout/select_timer_card"
+    />
+
+  <Button
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/saveBtn"
+    android:text="@string/save"
+    android:background="@drawable/light_green_filled_bg"
+    android:textColor="@color/white"
+    android:textSize="@dimen/size_15"
+    android:layout_marginTop="@dimen/size_20"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="@+id/recyclerView"
+    />
+</androidx.constraintlayout.widget.ConstraintLayout>

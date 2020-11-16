@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:orientation="vertical"
+  android:layout_height="match_parent"
+  tools:context=".fragments.GroupManager">
+
+  <ImageButton
+    android:id="@+id/addGroup"
+    android:layout_width="@dimen/size_90"
+    android:layout_height="@dimen/size_45"
+    android:background="@drawable/border_white"
+    android:elevation="@dimen/header_button_elevation"
+    android:src="@drawable/add_icon"
+    android:layout_gravity="center"
+    android:layout_margin="@dimen/size_20"
+    android:contentDescription="@string/add_new_group" />
+
+  <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/recyclerView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:nestedScrollingEnabled="true"
+    tools:listitem="@layout/group_card"
+    />
+</LinearLayout>
