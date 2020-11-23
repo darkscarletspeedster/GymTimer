@@ -25,7 +25,7 @@
   <string name="selected">&#160;Selected</string>
   <string name="no_items_selected">No Item(s) Selected!</string>
   <string name="items_deleted">&#160;Item(s) Deleted.</string>
-  <string name="break_on">Break On</string>
+  <string name="break_on">Break</string>
   <string name="group_break">Group Break</string>
   <string name="stop_button">Stop Button</string>
   <string name="play_pause_button">Play/Pause Button</string>
