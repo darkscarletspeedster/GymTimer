@@ -47,6 +47,7 @@ import com.example.gymtimer.interfaces.OnTimerFinish;
 import com.example.gymtimer.interfaces.OnWorkoutTimeFinish;
 import com.example.gymtimer.models.Group;
 import com.example.gymtimer.models.LinkGroupTimer;
+import com.example.gymtimer.models.PauseModel;
 import com.example.gymtimer.models.Timer;
 import com.example.gymtimer.viewmodels.TimerViewModel;
 import com.thekhaeng.pushdownanim.PushDownAnim;
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
   private TextView groupNameInClockText;
   private TextView timerNameInClockText;
   private TextView countDownText;
-  private boolean isStopped, isPaused, isTimerOn, isBreakCanceled;
+  private boolean isStopped, isPaused, isTimerOn, waiting;
   private LinearLayout mainTimerLayout;
   private LinearLayout controlLayout;
   private TextView breakOnText;
@@ -87,9 +88,9 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
   private TextView startSecText;
   private ImageButton cancelBreakBtn, pauseBtn;
   private OnGroupFinish onGroupFinish;
-  private CountDownTimer countDownTimer, workoutCDTimer, breakCDTimer;
+  private CountDownTimer countDownTimer;
   private final Object lockObject = new Object();
-  private boolean waiting;
+  private PauseModel pauseModel;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -166,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
       @Override
       public void onClick(View v) {
         if (SystemClock.elapsedRealtime() - lastClickedTime < 1000) {
+          showMessage(getString(R.string.presses_too_soon));
           return;
         }
         lastClickedTime = SystemClock.elapsedRealtime();
@@ -193,6 +195,7 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
         @Override
         public void onClick(View v) {
           if (SystemClock.elapsedRealtime() - lastClickedTime < 1000) {
+            showMessage(getString(R.string.presses_too_soon));
             return;
           }
           lastClickedTime = SystemClock.elapsedRealtime();
@@ -214,8 +217,6 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
       .setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-          isStopped = true;
-          timerThread.interrupt();
           onTimerDone();
         }
       });
@@ -224,8 +225,18 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
       .setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-          isBreakCanceled = true;
-          timerThread.interrupt();
+          String min = String.format(Locale.ENGLISH, "%02d", 0);
+          String sec = ":" + String.format(Locale.ENGLISH, "%02d", 0);
+          startMinText.setText(min);
+          startSecText.setText(sec);
+          countDownTimer.cancel();
+          new Handler(getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+              countDownTimer.onFinish();
+            }
+          }, 1000);
+
           pauseBtn.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.pause_button_icon, null));
           pauseBtn.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.border_primary_dark, null));
           isPaused = false;
@@ -236,16 +247,24 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
       .setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+          if (SystemClock.elapsedRealtime() - lastClickedTime < 1000) {
+            showMessage(getString(R.string.presses_too_soon));
+            return;
+          }
+          lastClickedTime = SystemClock.elapsedRealtime();
           if (isPaused) {
+            if (pauseModel != null && pauseModel.isBreak())
+              runBreak(pauseModel.getBreakTime(), pauseModel.getOnBreakFinish(), pauseModel.isGroupBreak(), pauseModel.getPendingMill());
+            else
+              runWorkout(pauseModel.getTimer(), pauseModel.getOnWorkoutTimeFinish(), pauseModel.getPendingMill());
+
             soundPool.resume(curStreamId);
-            isPaused = false;
-            timerThread.interrupt();
+            pauseModel = null;
             pauseBtn.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.pause_button_icon, null));
             pauseBtn.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.border_primary_dark, null));
           } else {
-            soundPool.pause(curStreamId);
             isPaused = true;
-            timerThread.interrupt();
+            soundPool.pause(curStreamId);
             pauseBtn.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.play_button_icon, null));
             pauseBtn.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.border_light_green, null));
           }
@@ -344,74 +363,52 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
    * Starting a timer
    */
   public void startTimer(final Timer timer) {
-    isTimerOn = true;
-    startLayout.setVisibility(View.VISIBLE);
-    navLayout.setVisibility(View.GONE);
+    if (!isTimerOn) {
+      isTimerOn = true;
+      startLayout.setVisibility(View.VISIBLE);
+      navLayout.setVisibility(View.GONE);
 
-    startCountDown(new OnCountDownFinish() {
-      @Override
-      public void setOnCountDownFinishListener() {
-        mainTimerLayout.setVisibility(View.VISIBLE);
-        controlLayout.setVisibility(View.VISIBLE);
-        breakOnText.setVisibility(View.VISIBLE);
-        cancelBreakBtn.setVisibility(View.VISIBLE);
-        runTimer(timer, new OnTimerFinish() {
-          @Override
-          public void setOnTimerFinishListener() {
-            onTimerDone();
-          }
-        });
-      }
-    });
+      startCountDown(new OnCountDownFinish() {
+        @Override
+        public void setOnCountDownFinishListener() {
+          mainTimerLayout.setVisibility(View.VISIBLE);
+          controlLayout.setVisibility(View.VISIBLE);
+          breakOnText.setVisibility(View.VISIBLE);
+          cancelBreakBtn.setVisibility(View.VISIBLE);
+          runTimer(timer, new OnTimerFinish() {
+            @Override
+            public void setOnTimerFinishListener() {
+              onTimerDone();
+            }
+          });
+        }
+      });
+    }
   }
 
-  private void runTimer(final Timer timer, OnTimerFinish onTimerFinish) {
+  private void runTimer(final Timer timer, final OnTimerFinish onTimerFinish) {
     timerThread = new Thread(new Runnable() {
       @Override
       public void run() {
-        Looper.prepare();
-        for (int i = timer.getSets() -1; i >= 0; i--) {
-          final int set = i;
-          new Handler(getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-              timerNameInClockText.setText(timer.getTimerName());
-              String curSet = getString(R.string.set) + String.format(Locale.ENGLISH, "%02d", (timer.getSets() - set));
-              breakOnText.setText(curSet);
-              runWorkout(timer, new OnWorkoutTimeFinish() {
-                @Override
-                public void setOnWorkoutTimeFinishListener() {
-                  synchronized (lockObject) {
-                    waiting = false;
-                    lockObject.notify();
-                  }
-                }
-              });
-            }
-          });
-          synchronized (lockObject) {
-            waiting = true;
-            while (waiting) {
-              try {
-                lockObject.wait();
-              } catch (InterruptedException e) {
-                break;
-              }
-            }
-          }
-          if (i != 0) {
+        try {
+          Looper.prepare();
+          for (int i = timer.getSets() - 1; i >= 0; i--) {
+            final int set = i;
             new Handler(getMainLooper()).post(new Runnable() {
               @Override
               public void run() {
-                runBreak(timer.getSetBreak(), new OnBreakFinish() {
+                timerNameInClockText.setText(timer.getTimerName());
+                String curSet = getString(R.string.set) + String.format(Locale.ENGLISH, "%02d", (timer.getSets() - set));
+                breakOnText.setText(curSet);
+                runWorkout(timer, new OnWorkoutTimeFinish() {
                   @Override
-                  public void setOnBreakFinishListener() {
+                  public void setOnWorkoutTimeFinishListener() {
                     synchronized (lockObject) {
                       waiting = false;
                       lockObject.notify();
                     }
                   }
-                }, false);
+                }, 0);
               }
             });
             synchronized (lockObject) {
@@ -420,24 +417,51 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
                 try {
                   lockObject.wait();
                 } catch (InterruptedException e) {
-                  break;
+                  return;
+                }
+              }
+            }
+            if (i != 0) {
+              new Handler(getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                  runBreak(timer.getSetBreak(), new OnBreakFinish() {
+                    @Override
+                    public void setOnBreakFinishListener() {
+                      synchronized (lockObject) {
+                        waiting = false;
+                        lockObject.notify();
+                      }
+                    }
+                  }, false, 0);
+                }
+              });
+              synchronized (lockObject) {
+                waiting = true;
+                while (waiting) {
+                  try {
+                    lockObject.wait();
+                  } catch (InterruptedException e) {
+                    return;
+                  }
                 }
               }
             }
           }
+          new Handler(getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+              onTimerFinish.setOnTimerFinishListener();
+            }
+          });
+        } catch (Exception ignored) {
         }
-        new Handler(getMainLooper()).post(new Runnable() {
-          @Override
-          public void run() {
-            onTimerDone();
-          }
-        });
       }
     });
     timerThread.start();
   }
 
-  private void runWorkout(Timer timer, final OnWorkoutTimeFinish onWorkoutTimeFinish) {
+  private void runWorkout(final Timer timer, final OnWorkoutTimeFinish onWorkoutTimeFinish, long pendingMill) {
     final HashSet<String> alertTimers = new HashSet<>();
     alertTimers.add(timer.getInWorkoutAlert1());
     alertTimers.add(timer.getInWorkoutAlert2());
@@ -446,9 +470,22 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
     long workMin = Long.parseLong(startMin) * 60000;
     long workSec = Long.parseLong(startSec) * 1000;
     long totalMill = workMin + workSec + 1000;
-    workoutCDTimer = new CountDownTimer(totalMill, 1000) {
+    if (isPaused) {
+      isPaused = false;
+      totalMill = pendingMill;
+    }
+    countDownTimer = new CountDownTimer(totalMill, 1000) {
       @Override
-      public void onTick(final long millisUntilFinished) {
+      public void onTick(long millisUntilFinished) {
+        if (isPaused) {
+          countDownTimer.cancel();
+          pauseModel = new PauseModel();
+          pauseModel.setIsBreak(false);
+          pauseModel.setTimer(timer);
+          pauseModel.setOnWorkoutTimeFinish(onWorkoutTimeFinish);
+          pauseModel.setPendingMill(millisUntilFinished);
+          return;
+        }
         long j = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) % TimeUnit.HOURS.toMinutes(1);
         long k = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % TimeUnit.MINUTES.toSeconds(1);
         String min = String.format(Locale.ENGLISH, "%02d", j);
@@ -464,14 +501,22 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
 
       @Override
       public void onFinish() {
-        workoutCDTimer = null;
+        if (isPaused) {
+          pauseModel = new PauseModel();
+          pauseModel.setIsBreak(false);
+          pauseModel.setTimer(timer);
+          pauseModel.setOnWorkoutTimeFinish(onWorkoutTimeFinish);
+          pauseModel.setPendingMill(0);
+          return;
+        }
+        countDownTimer = null;
         onWorkoutTimeFinish.setOnWorkoutTimeFinishListener();
       }
     };
-    workoutCDTimer.start();
+    countDownTimer.start();
   }
 
-  private void runBreak(String breakTime, final OnBreakFinish onBreakFinish, boolean isGroupBreak) {
+  private void runBreak(final String breakTime, final OnBreakFinish onBreakFinish, final boolean isGroupBreak, long pendingMill) {
     if (isGroupBreak)
       breakOnText.setText(R.string.group_break);
     else
@@ -482,9 +527,23 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
     final long breakMin = Long.parseLong(startMin) * 60000;
     final long breakSec = Long.parseLong(startSec) * 1000;
     long totalMill = breakMin + breakSec + 1000;
-    breakCDTimer = new CountDownTimer(totalMill, 1000) {
+    if (isPaused) {
+      isPaused = false;
+      totalMill = pendingMill;
+    }
+    countDownTimer = new CountDownTimer(totalMill, 1000) {
       @Override
       public void onTick(final long millisUntilFinished) {
+        if (isPaused) {
+          countDownTimer.cancel();
+          pauseModel = new PauseModel();
+          pauseModel.setIsBreak(true);
+          pauseModel.setBreakTime(breakTime);
+          pauseModel.setIsGroupBreak(isGroupBreak);
+          pauseModel.setOnBreakFinish(onBreakFinish);
+          pauseModel.setPendingMill(millisUntilFinished);
+          return;
+        }
         long j = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) % TimeUnit.HOURS.toMinutes(1);
         long k = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % TimeUnit.MINUTES.toSeconds(1);
         String min = String.format(Locale.ENGLISH, "%02d", j);
@@ -499,108 +558,22 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
 
       @Override
       public void onFinish() {
-        breakCDTimer = null;
+        if (isPaused) {
+          pauseModel = new PauseModel();
+          pauseModel.setIsBreak(true);
+          pauseModel.setBreakTime(breakTime);
+          pauseModel.setIsGroupBreak(isGroupBreak);
+          pauseModel.setOnBreakFinish(onBreakFinish);
+          pauseModel.setPendingMill(0);
+          return;
+        }
+        countDownTimer = null;
         onBreakFinish.setOnBreakFinishListener();
       }
     };
-    breakCDTimer.start();
+    countDownTimer.start();
   }
 
-  /*
-   * Run a timer
-   */
-  /*public void runTimer(final Timer timer, final OnTimerFinish onTimerFinish, final boolean isGroupBreak) {
-          // break
-          if (set != 0 || isGroupBreak) {
-            new Handler(getMainLooper()).post(new Runnable() {
-              @Override
-              public void run() {
-                if (isGroupBreak)
-                  breakOnText.setText(R.string.group_break);
-                else
-                  breakOnText.setText(R.string.break_on);
-                cancelBreakBtn.setVisibility(View.VISIBLE);
-              }
-            });
-
-            int internalBreakSec = breakSec;
-            for (int j = breakMin; j >= 0; j--) {
-              for (int k = internalBreakSec; k >= 0; k--) {
-                final int l = j;
-                final int m = k;
-                final String min = String.format(Locale.ENGLISH, "%02d", j);
-                final String sec = ":" + String.format(Locale.ENGLISH, "%02d", k);
-                new Handler(getMainLooper()).post(new Runnable() {
-                  @Override
-                  public void run() {
-                    startMinText.setText(min);
-                    startSecText.setText(sec);
-                    if (l == 0 && m == 0)
-                      soundPool.stop(curStreamId);
-                    else if (l == 0 && m == 3 || (breakMin == 0 && breakSec < 3 && breakSec == m))
-                      curStreamId = soundPool.play(countDownSound, 1, 1, 0, 0, 1);
-                  }
-                });
-                try {
-                  Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                  if (isPaused) {
-                    while (isPaused) {
-                      try {
-                        Thread.sleep(5000);
-                      } catch (InterruptedException ex) {
-                        if(isBreakCanceled) {
-                          new Handler(getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                              startMinText.setText(R.string.initial_value_number);
-                              String str = ":" + getString(R.string.initial_value_number);
-                              startSecText.setText(str);
-                              soundPool.stop(curStreamId);
-                            }
-                          });
-                          break;
-                        } else if(isStopped)
-                          return;
-                      }
-                    }
-                    if(isBreakCanceled)
-                      break;
-                  } else if (isBreakCanceled){
-                    new Handler(getMainLooper()).post(new Runnable() {
-                      @Override
-                      public void run() {
-                        startMinText.setText(R.string.initial_value_number);
-                        String str = ":" + getString(R.string.initial_value_number);
-                        startSecText.setText(str);
-                        soundPool.stop(curStreamId);
-                      }
-                    });
-                    break;
-                  } else
-                    return;
-                }
-              }
-              if(isBreakCanceled){
-                isBreakCanceled = false;
-                break;
-              }
-              internalBreakSec = 59;
-            }
-          }
-        }
-
-        new Handler(getMainLooper()).post(new Runnable() {
-          @Override
-          public void run() {
-            onTimerFinish.setOnTimerFinishListener();
-          }
-        });
-      }
-    });
-    timerThread.start();
-  }
-*/
   /*
    * Starting counter of any new activity.
    */
@@ -634,7 +607,6 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
   public void onTimerDone() {
     isTimerOn = false;
     isPaused = false;
-    isBreakCanceled = false;
     isStopped = true;
     navLayout.setVisibility(View.VISIBLE);
     startLayout.setVisibility(View.GONE);
@@ -651,14 +623,17 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
     cancelBreakBtn.setVisibility(View.GONE);
     pauseBtn.setImageDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.pause_button_icon, null));
     pauseBtn.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.border_primary_dark, null));
+    pauseModel = null;
 
     if (countDownTimer != null) {
       countDownTimer.cancel();
-      countDownTimer.onFinish();
+      countDownTimer = null;
     }
 
-    if (timerThread != null && timerThread.isAlive())
+    if (timerThread != null) {
       timerThread.interrupt();
+      timerThread = null;
+    }
 
     if (groupThread != null && groupThread.isAlive())
       groupThread.interrupt();
