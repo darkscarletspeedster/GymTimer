@@ -396,39 +396,7 @@
         />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!--<androidx.constraintlayout.widget.ConstraintLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:id="@+id/groupLayout"
-      android:layout_marginTop="@dimen/size_20"
-      android:layout_marginStart="@dimen/size_20"
-      android:layout_marginEnd="@dimen/size_20"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/inWorkoutAlertLayout">
-      <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/groupCheck"
-        android:text="@string/select_group"
-        android:textSize="@dimen/card_value_size"
-        android:textColor="@color/white"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        />
-      <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:theme="@style/LightGreenCheck"
-        android:id="@+id/groupCheckValue"
-        android:scaleX="1.5"
-        android:scaleY="1.5"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        />
-    </androidx.constraintlayout.widget.ConstraintLayout>-->
-
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:id="@+id/saveTimerBtn"
@@ -442,7 +410,7 @@
       app:layout_constraintEnd_toEndOf="@+id/inWorkoutAlertLayout"
       />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:id="@+id/cancelBtn"

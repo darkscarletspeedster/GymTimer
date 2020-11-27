@@ -52,4 +52,8 @@
   <string name="expand_group_for_timer_list">Expand Group for Timer List</string>
   <string name="could_not_undo_as_screen_closed">Could not Undo as Screen Closed.</string>
   <string name="presses_too_soon">Pressed too soon!!</string>
+  <string name="timer">Timer</string>
+  <string name="group">Group</string>
+  <string name="next_timer">Next Timer</string>
+  <string name="last_timer">Last Timer</string>
 </resources>

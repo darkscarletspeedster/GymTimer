@@ -31,7 +31,7 @@
     tools:listitem="@layout/select_timer_card"
     />
 
-  <Button
+  <androidx.appcompat.widget.AppCompatButton
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:id="@+id/saveBtn"
