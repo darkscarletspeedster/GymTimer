@@ -1,8 +1,10 @@
 package com.example.gymtimer.adapters;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -13,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,7 +27,9 @@ import com.thekhaeng.pushdownanim.PushDownAnim;
 import java.util.Locale;
 import java.util.Objects;
 public class InGroupTimerAdapter extends ListAdapter<LinkGroupTimer, InGroupTimerAdapter.InGroupTimerListHolder> {
-  private Context context;
+  private final Context context;
+  private RecyclerView inGroupView;
+  private ItemTouchHelper itemTouchHelper;
 
   private final static DiffUtil.ItemCallback<LinkGroupTimer> DIFF_TIMER = new DiffUtil.ItemCallback<LinkGroupTimer>() {
     @Override
@@ -58,6 +63,8 @@ public class InGroupTimerAdapter extends ListAdapter<LinkGroupTimer, InGroupTime
       Timer currentTimer = linkGroupTimer.getTimer();
       if (getItemCount() - 1 == position)
         holder.inGroupTime.setVisibility(View.INVISIBLE);
+      else
+        holder.inGroupTime.setVisibility(View.VISIBLE);
 
       holder.timerName.setText(currentTimer.getTimerName());
       holder.inGroupTime.setText(linkGroupTimer.getInGroupTime());
@@ -68,6 +75,11 @@ public class InGroupTimerAdapter extends ListAdapter<LinkGroupTimer, InGroupTime
       holder.alert1Text.setText(currentTimer.getInWorkoutAlert1());
       holder.alert2Text.setText(currentTimer.getInWorkoutAlert2());
     }
+  }
+
+  public void setTouchHelper (RecyclerView inGroupView, ItemTouchHelper itemTouchHelper) {
+    this.inGroupView = inGroupView;
+    this.itemTouchHelper = itemTouchHelper;
   }
 
   class InGroupTimerListHolder extends RecyclerView.ViewHolder {
@@ -150,21 +162,39 @@ public class InGroupTimerAdapter extends ListAdapter<LinkGroupTimer, InGroupTime
               linkGroupTimer.setInfoExpanded(false);
               inGroupTimerLayout.setVisibility(View.VISIBLE);
 
+              inGroupTimeMin.setOnTouchListener(new View.OnTouchListener() {
+                @SuppressLint("ClickableViewAccessibility")
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                  itemTouchHelper.attachToRecyclerView(null);
+                  return false;
+                }
+              });
               inGroupTimeMin.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
                 @Override
                 public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
                   String time = String.format(Locale.ENGLISH, "%02d", newVal) + inGroupTime.getText().toString().substring(2);
                   inGroupTime.setText(time);
                   linkGroupTimer.setInGroupTime(time);
+                  itemTouchHelper.attachToRecyclerView(inGroupView);
                 }
               });
 
+              inGroupTimeSec.setOnTouchListener(new View.OnTouchListener() {
+                @SuppressLint("ClickableViewAccessibility")
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                  itemTouchHelper.attachToRecyclerView(null);
+                  return false;
+                }
+              });
               inGroupTimeSec.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
                 @Override
                 public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
                   String time = inGroupTime.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
                   inGroupTime.setText(time);
                   linkGroupTimer.setInGroupTime(time);
+                  itemTouchHelper.attachToRecyclerView(inGroupView);
                 }
               });
             }

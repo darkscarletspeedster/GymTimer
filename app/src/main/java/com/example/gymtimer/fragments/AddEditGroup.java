@@ -48,20 +48,21 @@ import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 
 public class AddEditGroup extends Fragment {
 
-  private Context context;
+  final private Context context;
   private Group group;
   private ArrayList<LinkGroupTimer> linkGroupTimers;
-  private TimerViewModel timerViewModel;
+  final private TimerViewModel timerViewModel;
   private boolean isNew;
   private InGroupTimerAdapter inGroupTimerAdapter;
   private LinearLayoutManager linearLayoutManager;
-  private MainActivity mainActivity;
+  final private MainActivity mainActivity;
   private GroupViewModel groupViewModel;
   private LinkGroupTimerViewModel linkGroupTimerViewModel;
   private HashSet<LinkGroupTimer> toAddElements;
   private RecyclerView inGroupView;
   private HashSet<LinkGroupTimer> toDeleteLinkGroupTimers;
   private boolean isToBeAddedWithUpdate;
+  private ItemTouchHelper itemTouchHelper;
 
   public AddEditGroup(Context context, Group group, TimerViewModel timerViewModel) {
     this.context = context;
@@ -119,6 +120,11 @@ public class AddEditGroup extends Fragment {
         final LinkGroupTimer linkGroupTimer = linkGroupTimers.get(position);
         linkGroupTimers.remove(position);
         inGroupTimerAdapter.notifyItemRemoved(position);
+        if (linkGroupTimers.size() == position) {
+          View view = linearLayoutManager.findViewByPosition(position - 1);
+          Objects.requireNonNull(view).findViewById(R.id.inGroupTime).setVisibility(View.GONE);
+        }
+
         toDeleteLinkGroupTimers.add(linkGroupTimer);
         if (toAddElements.contains(linkGroupTimer)) {
           toAddElements.remove(linkGroupTimer);
@@ -133,8 +139,14 @@ public class AddEditGroup extends Fragment {
             @Override
             public void onClick(View v) {
               if (getActivity() != null) {
+                if (linkGroupTimers.size() == position) {
+                  View view = linearLayoutManager.findViewByPosition(position - 1);
+                  Objects.requireNonNull(view).findViewById(R.id.inGroupTime).setVisibility(View.VISIBLE);
+                }
+
                 linkGroupTimers.add(position, linkGroupTimer);
                 inGroupTimerAdapter.notifyItemInserted(position);
+
                 toDeleteLinkGroupTimers.remove(linkGroupTimer);
                 if (isToBeAddedWithUpdate) {
                   isToBeAddedWithUpdate = false;
@@ -167,12 +179,13 @@ public class AddEditGroup extends Fragment {
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
       }
     };
-    ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
+    itemTouchHelper = new ItemTouchHelper(simpleCallback);
 
     inGroupView.setLayoutManager(linearLayoutManager);
     inGroupView.setAdapter(inGroupTimerAdapter);
     itemTouchHelper.attachToRecyclerView(inGroupView);
     inGroupTimerAdapter.submitList(linkGroupTimers);
+    inGroupTimerAdapter.setTouchHelper(inGroupView, itemTouchHelper);
 
     if (group == null) {
       textView.setText(R.string.add_new_group);
@@ -354,8 +367,8 @@ public class AddEditGroup extends Fragment {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
   }
 
-  public void addTimersToList (ArrayList<Timer> timers) {
-    int n = linkGroupTimers.size();
+  public void addTimersToList (final ArrayList<Timer> timers) {
+    final int n = linkGroupTimers.size();
     for (int i = 0; i < timers.size(); i++) {
       LinkGroupTimer linkGroupTimer = new LinkGroupTimer(group, timers.get(i), n + i + 1, "01:00");
       if (!isNew)
@@ -363,7 +376,7 @@ public class AddEditGroup extends Fragment {
 
       linkGroupTimers.add(linkGroupTimer);
     }
-    inGroupTimerAdapter.notifyItemInserted(n);
+    inGroupTimerAdapter.notifyItemRangeInserted(n, timers.size());
     if (n != 0) {
       View view = linearLayoutManager.findViewByPosition(n - 1);
       Objects.requireNonNull(view).findViewById(R.id.inGroupTime).setVisibility(View.VISIBLE);
