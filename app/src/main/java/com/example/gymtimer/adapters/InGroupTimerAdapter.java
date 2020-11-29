@@ -162,12 +162,13 @@ public class InGroupTimerAdapter extends ListAdapter<LinkGroupTimer, InGroupTime
               linkGroupTimer.setInfoExpanded(false);
               inGroupTimerLayout.setVisibility(View.VISIBLE);
 
-              inGroupTimeMin.setOnTouchListener(new View.OnTouchListener() {
-                @SuppressLint("ClickableViewAccessibility")
+              inGroupTimeMin.setOnScrollListener(new NumberPicker.OnScrollListener() {
                 @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                  itemTouchHelper.attachToRecyclerView(null);
-                  return false;
+                public void onScrollStateChange(NumberPicker view, int scrollState) {
+                  if (scrollState == SCROLL_STATE_FLING || scrollState == SCROLL_STATE_TOUCH_SCROLL)
+                    itemTouchHelper.attachToRecyclerView(null);
+                  else
+                    itemTouchHelper.attachToRecyclerView(inGroupView);
                 }
               });
               inGroupTimeMin.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
@@ -180,12 +181,13 @@ public class InGroupTimerAdapter extends ListAdapter<LinkGroupTimer, InGroupTime
                 }
               });
 
-              inGroupTimeSec.setOnTouchListener(new View.OnTouchListener() {
-                @SuppressLint("ClickableViewAccessibility")
+              inGroupTimeSec.setOnScrollListener(new NumberPicker.OnScrollListener() {
                 @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                  itemTouchHelper.attachToRecyclerView(null);
-                  return false;
+                public void onScrollStateChange(NumberPicker view, int scrollState) {
+                  if (scrollState == SCROLL_STATE_FLING || scrollState == SCROLL_STATE_TOUCH_SCROLL)
+                    itemTouchHelper.attachToRecyclerView(null);
+                  else
+                    itemTouchHelper.attachToRecyclerView(inGroupView);
                 }
               });
               inGroupTimeSec.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {

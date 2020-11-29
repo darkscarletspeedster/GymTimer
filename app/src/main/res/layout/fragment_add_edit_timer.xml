@@ -96,12 +96,14 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:theme="@style/NumberPickerColor"
+          android:descendantFocusability="blocksDescendants"
           />
         <NumberPicker
           android:id="@+id/workOutTimeSec"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:theme="@style/NumberPickerColor"
+          android:descendantFocusability="blocksDescendants"
           />
       </LinearLayout>
 
@@ -162,6 +164,7 @@
         android:layout_height="wrap_content"
         android:theme="@style/NumberPickerColor"
         android:visibility="gone"
+        android:descendantFocusability="blocksDescendants"
         app:layout_constraintTop_toBottomOf="@+id/setsText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -231,12 +234,14 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:theme="@style/NumberPickerColor"
+          android:descendantFocusability="blocksDescendants"
           />
         <NumberPicker
           android:id="@+id/setBreakTimeSec"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:theme="@style/NumberPickerColor"
+          android:descendantFocusability="blocksDescendants"
           />
       </LinearLayout>
 
@@ -349,12 +354,14 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:theme="@style/NumberPickerColor"
+          android:descendantFocusability="blocksDescendants"
           />
         <NumberPicker
           android:id="@+id/alert1Sec"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:theme="@style/NumberPickerColor"
+          android:descendantFocusability="blocksDescendants"
           />
       </LinearLayout>
 
@@ -372,12 +379,14 @@
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:theme="@style/NumberPickerColor"
+          android:descendantFocusability="blocksDescendants"
           />
         <NumberPicker
           android:id="@+id/alert2Sec"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:theme="@style/NumberPickerColor"
+          android:descendantFocusability="blocksDescendants"
           />
       </LinearLayout>
 
