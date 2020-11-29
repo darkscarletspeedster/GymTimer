@@ -189,7 +189,7 @@
           android:hint="@string/group"
           android:padding="@dimen/size_5"
           android:enabled="false"
-          android:textSize="@dimen/size_30"
+          android:textSize="@dimen/size_25"
           android:textColor="@color/colorAccent"/>
       </com.google.android.material.textfield.TextInputLayout>
 
@@ -214,7 +214,7 @@
           android:hint="@string/timer"
           android:padding="@dimen/size_5"
           android:enabled="false"
-          android:textSize="@dimen/size_30"
+          android:textSize="@dimen/size_25"
           android:textColor="@color/colorAccent"/>
       </com.google.android.material.textfield.TextInputLayout>
 
@@ -230,6 +230,7 @@
         android:layout_below="@+id/timerNameInClockTextContainer"
         android:textColorHint="@color/white"
         android:visibility="gone"
+        app:boxStrokeWidth="@dimen/size_0"
         >
         <com.google.android.material.textfield.TextInputEditText
           android:layout_width="match_parent"

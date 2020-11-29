@@ -250,7 +250,8 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
           new Handler(getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
-              countDownTimer.onFinish();
+              if (countDownTimer != null)
+                countDownTimer.onFinish();
             }
           }, 1000);
 
