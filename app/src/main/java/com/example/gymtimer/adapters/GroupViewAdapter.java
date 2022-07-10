@@ -26,6 +26,7 @@ import java.util.Objects;
 
 public class GroupViewAdapter extends ListAdapter<LinkGroupTimer, GroupViewAdapter.GroupViewListHolder> {
   private Context context;
+  public int colorChangePosition;
 
   private final static DiffUtil.ItemCallback<LinkGroupTimer> DIFF_TIMER = new DiffUtil.ItemCallback<>() {
     @Override
@@ -39,9 +40,10 @@ public class GroupViewAdapter extends ListAdapter<LinkGroupTimer, GroupViewAdapt
     }
   };
 
-  public GroupViewAdapter(Context context) {
+  public GroupViewAdapter(Context context, int colorChangePosition) {
     super(DIFF_TIMER);
     this.context = context;
+    this.colorChangePosition = colorChangePosition;
   }
 
   @NonNull
@@ -64,6 +66,8 @@ public class GroupViewAdapter extends ListAdapter<LinkGroupTimer, GroupViewAdapt
       holder.setBreakValueText.setText(currentTimer.getSetBreak());
       holder.alert1Text.setText(currentTimer.getInWorkoutAlert1());
       holder.alert2Text.setText(currentTimer.getInWorkoutAlert2());
+      if (colorChangePosition != -1 && colorChangePosition == position)
+        holder.timerCard.setBackgroundColor(ResourcesCompat.getColor(context.getResources(), R.color.red, null));
     }
   }
 

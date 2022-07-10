@@ -33,8 +33,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.gymtimer.common.BounceInterpolator;
+import com.example.gymtimer.dialogs.GroupTimersDialog;
 import com.example.gymtimer.fragments.AddEditTimer;
 import com.example.gymtimer.fragments.GroupManager;
 import com.example.gymtimer.fragments.MainListTab;
@@ -56,7 +58,9 @@ import com.thekhaeng.pushdownanim.PushDownAnim;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainActivity extends AppCompatActivity implements View.OnLongClickListener {
   private long lastClickedTime = 0;
@@ -283,6 +287,12 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
       groupNameInClockText.setText(group.getGroupName());
       navLayout.setVisibility(View.GONE);
 
+      GroupTimersDialog groupTimersDialog = new GroupTimersDialog(mainListTab.getActivity(), null, linkGroupTimers);
+
+      PushDownAnim.setPushDownAnimTo(expandGroupBtn).setOnClickListener(v -> {
+        groupTimersDialog.show();
+      });
+
       startCountDown(() -> {
         mainTimerLayout.setVisibility(View.VISIBLE);
         controlLayout.setVisibility(View.VISIBLE);
@@ -300,16 +310,21 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
                 lockObjectGroup.notify();
               }
             });
+
+            int finalI = i;
+
             if (i != linkGroupTimers.size() - 1) {
               final Timer nextTimer = linkGroupTimers.get(i + 1).getTimer();
               new Handler(getMainLooper()).post(() -> {
                 nextTimerNameInClockTextContainer.setVisibility(View.VISIBLE);
                 nextTimerNameInClockText.setText(nextTimer.getTimerName());
+                groupTimersDialog.colorChangePosition = finalI;
               });
             } else {
               new Handler(getMainLooper()).post(() -> {
                 nextTimerNameInClockTextContainer.setVisibility(View.GONE);
                 timerNameInClockTextContainer.setHint("Last Timer");
+                groupTimersDialog.colorChangePosition = finalI;
               });
             }
             synchronized (lockObjectGroup) {
