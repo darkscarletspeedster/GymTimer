@@ -1,6 +1,5 @@
 package com.example.gymtimer.models;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.Entity;
 import androidx.room.Index;
@@ -11,7 +10,6 @@ import androidx.room.PrimaryKey;
 public class Group {
   // variables
   @PrimaryKey(autoGenerate = true)
-  @NonNull
   private int id;
   private String groupName;
 

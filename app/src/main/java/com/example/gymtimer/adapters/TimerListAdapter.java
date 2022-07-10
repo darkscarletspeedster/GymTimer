@@ -33,7 +33,7 @@ public class TimerListAdapter extends ListAdapter<Timer, TimerListAdapter.TimerL
   private MainActivity mainActivity;
   private HashMap<Integer, Timer> timersToDelete;
 
-  private static final DiffUtil.ItemCallback<Timer> DIFF_TIMER = new DiffUtil.ItemCallback<Timer>() {
+  private static final DiffUtil.ItemCallback<Timer> DIFF_TIMER = new DiffUtil.ItemCallback<>() {
     @Override
     public boolean areItemsTheSame(@NonNull Timer oldItem, @NonNull Timer newItem) {
       return oldItem.getId() == newItem.getId();
@@ -130,74 +130,59 @@ public class TimerListAdapter extends ListAdapter<Timer, TimerListAdapter.TimerL
       alert2Text = itemView.findViewById(R.id.alert2Text);
 
       PushDownAnim.setPushDownAnimTo(startButton)
-        .setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            int position = getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION) {
-              mainActivity.startTimer(getItem(position));
-            }
+        .setOnClickListener(v -> {
+          int position = getAbsoluteAdapterPosition();
+          if (position != RecyclerView.NO_POSITION) {
+            mainActivity.startTimer(getItem(position));
           }
         });
 
-      expandBtn.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          int position = getAdapterPosition();
+      expandBtn.setOnClickListener(v -> {
+        int position = getAbsoluteAdapterPosition();
+        if (position != RecyclerView.NO_POSITION) {
+          Timer timer = getItem(position);
+          if (timer.isExpanded()) {
+            expandBtn.setImageDrawable(ResourcesCompat.getDrawable(parentContext.getResources(), R.drawable.expand_card, null));
+            moreInfoView.setVisibility(View.GONE);
+          } else {
+            expandBtn.setImageDrawable(ResourcesCompat.getDrawable(parentContext.getResources(), R.drawable.collapse_card, null));
+            moreInfoView.setVisibility(View.VISIBLE);
+          }
+          timer.setIsExpanded(!timer.isExpanded());
+        }
+      });
+
+      editButton.setOnClickListener(v -> {
+        int position = getAbsoluteAdapterPosition();
+        if (onEditClicked != null && position != RecyclerView.NO_POSITION)
+          onEditClicked.onEditClick(getItem(position));
+      });
+
+      timerCard.setOnClickListener(v -> {
+        if (mainActivity.isDeleteOn) {
+          int position = getAbsoluteAdapterPosition();
           if (position != RecyclerView.NO_POSITION) {
             Timer timer = getItem(position);
-            if (timer.isExpanded()) {
-              expandBtn.setImageDrawable(ResourcesCompat.getDrawable(parentContext.getResources(), R.drawable.expand_card, null));
-              moreInfoView.setVisibility(View.GONE);
+            if (timer.isSelected()) {
+              timerCard.setCardBackgroundColor(ResourcesCompat.getColor(parentContext.getResources(), R.color.transparent, null));
+              timersToDelete.remove(timer.getId());
             } else {
-              expandBtn.setImageDrawable(ResourcesCompat.getDrawable(parentContext.getResources(), R.drawable.collapse_card, null));
-              moreInfoView.setVisibility(View.VISIBLE);
+              timerCard.setCardBackgroundColor(ResourcesCompat.getColor(parentContext.getResources(), R.color.red, null));
+              timersToDelete.put(timer.getId(), timer);
             }
-            timer.setIsExpanded(!timer.isExpanded());
+            mainActivity.updateCounter(timersToDelete.size());
+            timer.setIsSelected(!timer.isSelected());
           }
         }
       });
 
-      editButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          int position = getAdapterPosition();
-          if (onEditClicked != null && position != RecyclerView.NO_POSITION)
-            onEditClicked.onEditClick(getItem(position));
-        }
-      });
+      timerCard.setOnLongClickListener(v -> {
+        if (!mainActivity.isDeleteOn)
+          timersToDelete = new HashMap<>();
+        else
+          timersToDelete = null;
 
-      timerCard.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          if (mainActivity.isDeleteOn) {
-            int position = getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION) {
-              Timer timer = getItem(position);
-              if (timer.isSelected()) {
-                timerCard.setCardBackgroundColor(ResourcesCompat.getColor(parentContext.getResources(), R.color.transparent, null));
-                timersToDelete.remove(timer.getId());
-              } else {
-                timerCard.setCardBackgroundColor(ResourcesCompat.getColor(parentContext.getResources(), R.color.red, null));
-                timersToDelete.put(timer.getId(), timer);
-              }
-              mainActivity.updateCounter(timersToDelete.size());
-              timer.setIsSelected(!timer.isSelected());
-            }
-          }
-        }
-      });
-
-      timerCard.setOnLongClickListener(new View.OnLongClickListener() {
-        @Override
-        public boolean onLongClick(View v) {
-          if (!mainActivity.isDeleteOn)
-            timersToDelete = new HashMap<>();
-          else
-            timersToDelete = null;
-
-          return mainActivity.onLongClick(v);
-        }
+        return mainActivity.onLongClick(v);
       });
     }
   }

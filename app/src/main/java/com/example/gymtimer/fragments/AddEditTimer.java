@@ -27,7 +27,6 @@ import com.example.gymtimer.viewmodels.TimerViewModel;
 import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.Locale;
-import java.util.Objects;
 
 public class AddEditTimer extends Fragment {
   private Context context;
@@ -140,173 +139,114 @@ public class AddEditTimer extends Fragment {
     }
 
     //  functions
-    workOutTimeText.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (workOutTimeContainer.getVisibility() == View.GONE) {
-          workOutTimeContainer.setVisibility(View.VISIBLE);
-          saveWorkOutTimer.setVisibility(View.VISIBLE);
-        }
+    workOutTimeText.setOnClickListener(v -> {
+      if (workOutTimeContainer.getVisibility() == View.GONE) {
+        workOutTimeContainer.setVisibility(View.VISIBLE);
+        saveWorkOutTimer.setVisibility(View.VISIBLE);
       }
     });
 
-    saveWorkOutTimer.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        workOutTimeContainer.setVisibility(View.GONE);
-        saveWorkOutTimer.setVisibility(View.GONE);
+    saveWorkOutTimer.setOnClickListener(v -> {
+      workOutTimeContainer.setVisibility(View.GONE);
+      saveWorkOutTimer.setVisibility(View.GONE);
+    });
+
+    workOutTimeMin.setOnValueChangedListener((picker, oldVal, newVal) -> {
+      String time = String.format(Locale.ENGLISH, "%02d", newVal) + workOutTimeText.getText().toString().substring(2);
+      workOutTimeText.setText(time);
+    });
+
+    workOutTimeSec.setOnValueChangedListener((picker, oldVal, newVal) -> {
+      String time = workOutTimeText.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
+      workOutTimeText.setText(time);
+    });
+
+    setsValueText.setOnClickListener(v -> {
+      if (setsPicker.getVisibility() == View.GONE) {
+        setsPicker.setVisibility(View.VISIBLE);
+        saveSetsButton.setVisibility(View.VISIBLE);
       }
     });
 
-    workOutTimeMin.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-      @Override
-      public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-        String time = String.format(Locale.ENGLISH, "%02d", newVal) + workOutTimeText.getText().toString().substring(2);
-        workOutTimeText.setText(time);
+    saveSetsButton.setOnClickListener(v -> {
+      setsPicker.setVisibility(View.GONE);
+      saveSetsButton.setVisibility(View.GONE);
+    });
+
+    setsPicker.setOnValueChangedListener((picker, oldVal, newVal) -> {
+      String sets = String.format(Locale.ENGLISH, "%02d", newVal);
+      setsValueText.setText(sets);
+    });
+
+    setBreakTimeText.setOnClickListener(v -> {
+      if (setBreakTimeContainer.getVisibility() == View.GONE) {
+        setBreakTimeContainer.setVisibility(View.VISIBLE);
+        saveSetBreakTimeBtn.setVisibility(View.VISIBLE);
       }
     });
 
-    workOutTimeSec.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-      @Override
-      public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-        String time = workOutTimeText.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
-        workOutTimeText.setText(time);
-      }
+    saveSetBreakTimeBtn.setOnClickListener(v -> {
+      setBreakTimeContainer.setVisibility(View.GONE);
+      saveSetBreakTimeBtn.setVisibility(View.GONE);
     });
 
-    setsValueText.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (setsPicker.getVisibility() == View.GONE) {
-          setsPicker.setVisibility(View.VISIBLE);
-          saveSetsButton.setVisibility(View.VISIBLE);
-        }
-      }
+    setBreakTimeMin.setOnValueChangedListener((picker, oldVal, newVal) -> {
+      String time = String.format(Locale.ENGLISH, "%02d", newVal) + setBreakTimeText.getText().toString().substring(2);
+      setBreakTimeText.setText(time);
     });
 
-    saveSetsButton.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        setsPicker.setVisibility(View.GONE);
-        saveSetsButton.setVisibility(View.GONE);
-      }
-    });
-
-    setsPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-      @Override
-      public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-        String sets = String.format(Locale.ENGLISH, "%02d", newVal);
-        setsValueText.setText(sets);
-      }
-    });
-
-    setBreakTimeText.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (setBreakTimeContainer.getVisibility() == View.GONE) {
-          setBreakTimeContainer.setVisibility(View.VISIBLE);
-          saveSetBreakTimeBtn.setVisibility(View.VISIBLE);
-        }
-      }
-    });
-
-    saveSetBreakTimeBtn.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        setBreakTimeContainer.setVisibility(View.GONE);
-        saveSetBreakTimeBtn.setVisibility(View.GONE);
-      }
-    });
-
-    setBreakTimeMin.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-      @Override
-      public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-        String time = String.format(Locale.ENGLISH, "%02d", newVal) + setBreakTimeText.getText().toString().substring(2);
-        setBreakTimeText.setText(time);
-      }
-    });
-
-    setBreakTimeSec.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-      @Override
-      public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-        String time = setBreakTimeText.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
-        setBreakTimeText.setText(time);
-      }
+    setBreakTimeSec.setOnValueChangedListener((picker, oldVal, newVal) -> {
+      String time = setBreakTimeText.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
+      setBreakTimeText.setText(time);
     });
 
     PushDownAnim.setPushDownAnimTo(cancelButton)
-      .setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          Objects.requireNonNull(getActivity()).onBackPressed();
-        }
-      });
+      .setOnClickListener(v -> requireActivity().onBackPressed());
 
-    alert1Text.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (alert2Container.getVisibility() == View.VISIBLE)
-          alert2Container.setVisibility(View.GONE);
-        if (alert1Container.getVisibility() == View.GONE)
-          alert1Container.setVisibility(View.VISIBLE);
-        if (saveInWorkoutAlertsBtn.getVisibility() == View.GONE)
-          saveInWorkoutAlertsBtn.setVisibility(View.VISIBLE);
-      }
+    alert1Text.setOnClickListener(v -> {
+      if (alert2Container.getVisibility() == View.VISIBLE)
+        alert2Container.setVisibility(View.GONE);
+      if (alert1Container.getVisibility() == View.GONE)
+        alert1Container.setVisibility(View.VISIBLE);
+      if (saveInWorkoutAlertsBtn.getVisibility() == View.GONE)
+        saveInWorkoutAlertsBtn.setVisibility(View.VISIBLE);
     });
 
-    alert1TimeMin.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-      @Override
-      public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-        String time = String.format(Locale.ENGLISH, "%02d", newVal) + alert1Text.getText().toString().substring(2);
-        alert1Text.setText(time);
-      }
+    alert1TimeMin.setOnValueChangedListener((picker, oldVal, newVal) -> {
+      String time = String.format(Locale.ENGLISH, "%02d", newVal) + alert1Text.getText().toString().substring(2);
+      alert1Text.setText(time);
     });
 
-    alert1TimeSec.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-      @Override
-      public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-        String time = alert1Text.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
-        alert1Text.setText(time);
-      }
+    alert1TimeSec.setOnValueChangedListener((picker, oldVal, newVal) -> {
+      String time = alert1Text.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
+      alert1Text.setText(time);
     });
 
-    alert2Text.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (alert1Container.getVisibility() == View.VISIBLE)
-          alert1Container.setVisibility(View.GONE);
-        if (alert2Container.getVisibility() == View.GONE)
-          alert2Container.setVisibility(View.VISIBLE);
-        if (saveInWorkoutAlertsBtn.getVisibility() == View.GONE)
-          saveInWorkoutAlertsBtn.setVisibility(View.VISIBLE);
-      }
+    alert2Text.setOnClickListener(v -> {
+      if (alert1Container.getVisibility() == View.VISIBLE)
+        alert1Container.setVisibility(View.GONE);
+      if (alert2Container.getVisibility() == View.GONE)
+        alert2Container.setVisibility(View.VISIBLE);
+      if (saveInWorkoutAlertsBtn.getVisibility() == View.GONE)
+        saveInWorkoutAlertsBtn.setVisibility(View.VISIBLE);
     });
 
-    alert2TimeMin.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-      @Override
-      public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-        String time = String.format(Locale.ENGLISH, "%02d", newVal) + alert2Text.getText().toString().substring(2);
-        alert2Text.setText(time);
-      }
+    alert2TimeMin.setOnValueChangedListener((picker, oldVal, newVal) -> {
+      String time = String.format(Locale.ENGLISH, "%02d", newVal) + alert2Text.getText().toString().substring(2);
+      alert2Text.setText(time);
     });
 
-    alert2TimeSec.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-      @Override
-      public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-        String time = alert2Text.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
-        alert2Text.setText(time);
-      }
+    alert2TimeSec.setOnValueChangedListener((picker, oldVal, newVal) -> {
+      String time = alert2Text.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
+      alert2Text.setText(time);
     });
 
-    saveInWorkoutAlertsBtn.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        saveInWorkoutAlertsBtn.setVisibility(View.GONE);
-        if (alert1Container.getVisibility() == View.VISIBLE)
-          alert1Container.setVisibility(View.GONE);
-        else
-          alert2Container.setVisibility(View.GONE);
-      }
+    saveInWorkoutAlertsBtn.setOnClickListener(v -> {
+      saveInWorkoutAlertsBtn.setVisibility(View.GONE);
+      if (alert1Container.getVisibility() == View.VISIBLE)
+        alert1Container.setVisibility(View.GONE);
+      else
+        alert2Container.setVisibility(View.GONE);
     });
 
     timerName.addTextChangedListener(new TextWatcher() {
@@ -325,64 +265,61 @@ public class AddEditTimer extends Fragment {
     });
 
     PushDownAnim.setPushDownAnimTo(saveButton)
-      .setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          if (timerName.getText().toString().isEmpty()) {
-            showMessage(getString(R.string.workout_name_cannot_be_empty));
-            timerName.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.border_red, null));
-            return;
-          }
-          mainActivity.appProgressBar.setVisibility(View.VISIBLE);
-          if (isNew)
-            timer = new Timer(timerName.getText().toString());
-          else
-            timer.setTimerName(timerName.getText().toString());
-
-          timer.setWorkOutTime(workOutTimeText.getText().toString());
-          timer.setSets(Integer.parseInt(setsValueText.getText().toString()));
-          timer.setSetBreak(setBreakTimeText.getText().toString());
-          timer.setInWorkoutAlert1(alert1Text.getText().toString());
-          timer.setInWorkoutAlert2(alert2Text.getText().toString());
-          if (isNew)
-            timerViewModel.insert(timer, new DMLOperations<Timer>() {
-              @Override
-              public void onSuccess(Timer item) {
-                mainActivity.appProgressBar.setVisibility(View.GONE);
-                if (getActivity() != null) {
-                  showMessage(timer.getTimerName() + getString(R.string.inserted_successfully));
-                  Objects.requireNonNull(getActivity()).onBackPressed();
-                }
-              }
-
-              @Override
-              public void onFailure(Timer item, Exception e) {
-                if (getActivity() != null) {
-                  mainActivity.appProgressBar.setVisibility(View.GONE);
-                  showMessage(e.getMessage());
-                }
-              }
-            });
-          else
-            timerViewModel.update(timer, new DMLOperations<Timer>() {
-              @Override
-              public void onSuccess(Timer item) {
-                mainActivity.appProgressBar.setVisibility(View.GONE);
-                if (getActivity() != null) {
-                  showMessage(timer.getTimerName() + getString(R.string.updated_successfully));
-                  Objects.requireNonNull(getActivity()).onBackPressed();
-                }
-              }
-
-              @Override
-              public void onFailure(Timer item, Exception e) {
-                if (getActivity() != null) {
-                  mainActivity.appProgressBar.setVisibility(View.GONE);
-                  showMessage(e.getMessage());
-                }
-              }
-            });
+      .setOnClickListener(v -> {
+        if (timerName.getText().toString().isEmpty()) {
+          showMessage(getString(R.string.workout_name_cannot_be_empty));
+          timerName.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.border_red, null));
+          return;
         }
+        mainActivity.appProgressBar.setVisibility(View.VISIBLE);
+        if (isNew)
+          timer = new Timer(timerName.getText().toString());
+        else
+          timer.setTimerName(timerName.getText().toString());
+
+        timer.setWorkOutTime(workOutTimeText.getText().toString());
+        timer.setSets(Integer.parseInt(setsValueText.getText().toString()));
+        timer.setSetBreak(setBreakTimeText.getText().toString());
+        timer.setInWorkoutAlert1(alert1Text.getText().toString());
+        timer.setInWorkoutAlert2(alert2Text.getText().toString());
+        if (isNew)
+          timerViewModel.insert(timer, new DMLOperations<>() {
+            @Override
+            public void onSuccess(Timer item) {
+              mainActivity.appProgressBar.setVisibility(View.GONE);
+              if (getActivity() != null) {
+                showMessage(timer.getTimerName() + getString(R.string.inserted_successfully));
+                requireActivity().onBackPressed();
+              }
+            }
+
+            @Override
+            public void onFailure(Timer item, Exception e) {
+              if (getActivity() != null) {
+                mainActivity.appProgressBar.setVisibility(View.GONE);
+                showMessage(e.getMessage());
+              }
+            }
+          });
+        else
+          timerViewModel.update(timer, new DMLOperations<>() {
+            @Override
+            public void onSuccess(Timer item) {
+              mainActivity.appProgressBar.setVisibility(View.GONE);
+              if (getActivity() != null) {
+                showMessage(timer.getTimerName() + getString(R.string.updated_successfully));
+                requireActivity().onBackPressed();
+              }
+            }
+
+            @Override
+            public void onFailure(Timer item, Exception e) {
+              if (getActivity() != null) {
+                mainActivity.appProgressBar.setVisibility(View.GONE);
+                showMessage(e.getMessage());
+              }
+            }
+          });
       });
 
     return rootView;

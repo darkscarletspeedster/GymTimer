@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,7 +33,6 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator;
 
@@ -64,16 +62,13 @@ public class MainListTab extends Fragment {
     timerListAdapter.submitList(curTimers);
     final LinkGroupTimerViewModel linkGroupTimerViewModel = new LinkGroupTimerViewModel(mainActivity.application);
 
-    timerViewModel.getAllTimers(new ObservableList<Timer>() {
+    timerViewModel.getAllTimers(new ObservableList<>() {
       @Override
       public void onSuccess(LiveData<List<Timer>> itemsList) {
-        itemsList.observeForever(new Observer<List<Timer>>() {
-          @Override
-          public void onChanged(List<Timer> timers) {
-            ArrayList<Timer> updatedTimerList = (ArrayList<Timer>) timers;
-            timerListAdapter.submitList(updatedTimerList);
-            curTimers = updatedTimerList;
-          }
+        itemsList.observeForever(timers -> {
+          ArrayList<Timer> updatedTimerList = (ArrayList<Timer>) timers;
+          timerListAdapter.submitList(updatedTimerList);
+          curTimers = updatedTimerList;
         });
         mainActivity.appProgressBar.setVisibility(View.GONE);
       }
@@ -85,17 +80,14 @@ public class MainListTab extends Fragment {
       }
     });
 
-    timerListAdapter.setOnEditClicked(new TimerListAdapter.OnEditClicked() {
-      @Override
-      public void onEditClick(Timer timer) {
-        mainActivity.navLayout.setVisibility(View.GONE);
-        Objects.requireNonNull(getActivity()).getSupportFragmentManager()
-          .beginTransaction()
-          .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
-          .replace(R.id.fragmentContainer, new AddEditTimer(context, timer, timerViewModel))
-          .addToBackStack(null)
-          .commit();
-      }
+    timerListAdapter.setOnEditClicked(timer -> {
+      mainActivity.navLayout.setVisibility(View.GONE);
+      requireActivity().getSupportFragmentManager()
+        .beginTransaction()
+        .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
+        .replace(R.id.fragmentContainer, new AddEditTimer(context, timer, timerViewModel))
+        .addToBackStack(null)
+        .commit();
     });
 
     new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -107,53 +99,45 @@ public class MainListTab extends Fragment {
       @Override
       public void onSwiped(@NonNull final RecyclerView.ViewHolder viewHolder, int direction) {
         mainActivity.appProgressBar.setVisibility(View.VISIBLE);
-        final Timer timer = curTimers.get(viewHolder.getAdapterPosition());
-        linkGroupTimerViewModel.getAllByTimer(timer.getId(), new DMLOperationsOnMultiple<LinkGroupTimer>() {
+        final Timer timer = curTimers.get(viewHolder.getAbsoluteAdapterPosition());
+        linkGroupTimerViewModel.getAllByTimer(timer.getId(), new DMLOperationsOnMultiple<>() {
           @Override
           public void onSuccess(final ArrayList<LinkGroupTimer> items) {
-            timerViewModel.delete(timer, new DMLOperations<Timer>() {
+            timerViewModel.delete(timer, new DMLOperations<>() {
               @Override
               public void onSuccess(final Timer timerToDelete) {
                 mainActivity.appProgressBar.setVisibility(View.GONE);
                 showMessage(timerToDelete.getTimerName() + getString(R.string.workout_deleted));
                 Snackbar.make(timerRecyclerView, timerToDelete.getTimerName(), Snackbar.LENGTH_SHORT)
-                  .setAction(R.string.undo_delete, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                      if (getActivity() != null) {
-                        mainActivity.appProgressBar.setVisibility(View.VISIBLE);
-                        timerViewModel.insert(timerToDelete, new DMLOperations<Timer>() {
-                          @Override
-                          public void onSuccess(final Timer timerInserted) {
-                            linkGroupTimerViewModel.insert(items, new DMLOperationsOnMultiple<LinkGroupTimer>() {
-                              @Override
-                              public void onSuccess(ArrayList<LinkGroupTimer> items) {
-                                mainActivity.appProgressBar.setVisibility(View.GONE);
-                                showMessage(timerInserted.getTimerName() + getString(R.string.workout_added_back));
-                              }
+                  .setAction(R.string.undo_delete, v -> {
+                    if (getActivity() != null) {
+                      mainActivity.appProgressBar.setVisibility(View.VISIBLE);
+                      timerViewModel.insert(timerToDelete, new DMLOperations<>() {
+                        @Override
+                        public void onSuccess(final Timer timerInserted) {
+                          linkGroupTimerViewModel.insert(items, new DMLOperationsOnMultiple<>() {
+                            @Override
+                            public void onSuccess(ArrayList<LinkGroupTimer> items1) {
+                              mainActivity.appProgressBar.setVisibility(View.GONE);
+                              showMessage(timerInserted.getTimerName() + getString(R.string.workout_added_back));
+                            }
 
-                              @Override
-                              public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
-                                mainActivity.appProgressBar.setVisibility(View.GONE);
-                                showMessage(e.getMessage());
-                              }
-                            });
-                          }
+                            @Override
+                            public void onFailure(ArrayList<LinkGroupTimer> items1, Exception e) {
+                              mainActivity.appProgressBar.setVisibility(View.GONE);
+                              showMessage(e.getMessage());
+                            }
+                          });
+                        }
 
-                          @Override
-                          public void onFailure(Timer item, Exception e) {
-                            mainActivity.appProgressBar.setVisibility(View.GONE);
-                            showMessage(e.getMessage());
-                          }
-                        });
-                      } else {
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                          @Override
-                          public void run() {
-                            Toast.makeText(mainActivity, R.string.could_not_undo_as_screen_closed, Toast.LENGTH_SHORT).show();
-                          }
-                        });
-                      }
+                        @Override
+                        public void onFailure(Timer item, Exception e) {
+                          mainActivity.appProgressBar.setVisibility(View.GONE);
+                          showMessage(e.getMessage());
+                        }
+                      });
+                    } else {
+                      new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(mainActivity, R.string.could_not_undo_as_screen_closed, Toast.LENGTH_SHORT).show());
                     }
                   }).show();
               }
@@ -161,8 +145,8 @@ public class MainListTab extends Fragment {
               @Override
               public void onFailure(Timer item, Exception e) {
                 mainActivity.appProgressBar.setVisibility(View.GONE);
-                curTimers.add(viewHolder.getAdapterPosition(), item);
-                timerListAdapter.notifyItemInserted(viewHolder.getAdapterPosition());
+                curTimers.add(viewHolder.getAbsoluteAdapterPosition(), item);
+                timerListAdapter.notifyItemInserted(viewHolder.getAbsoluteAdapterPosition());
                 showMessage(e.getMessage());
               }
             });

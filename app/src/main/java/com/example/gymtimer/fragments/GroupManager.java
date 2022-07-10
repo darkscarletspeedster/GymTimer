@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,7 +26,6 @@ import com.example.gymtimer.adapters.GroupListAdapter;
 import com.example.gymtimer.interfaces.DMLOperations;
 import com.example.gymtimer.interfaces.DMLOperationsOnMultiple;
 import com.example.gymtimer.interfaces.ObservableList;
-import com.example.gymtimer.interfaces.OnGroupFinish;
 import com.example.gymtimer.models.Group;
 import com.example.gymtimer.models.LinkGroupTimer;
 import com.example.gymtimer.viewmodels.GroupViewModel;
@@ -38,7 +36,6 @@ import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator;
 
@@ -71,16 +68,13 @@ public class GroupManager extends Fragment {
     groupRecyclerView.setAdapter(groupListAdapter);
     groupListAdapter.submitList(groups);
 
-    groupViewModel.getAllGroups(new ObservableList<Group>() {
+    groupViewModel.getAllGroups(new ObservableList<>() {
       @Override
       public void onSuccess(LiveData<List<Group>> itemsList) {
-        itemsList.observe(getViewLifecycleOwner(), new Observer<List<Group>>() {
-          @Override
-          public void onChanged(List<Group> groups) {
-            ArrayList<Group> updatedGroupList = (ArrayList<Group>) groups;
-            groupListAdapter.submitList(updatedGroupList);
-            GroupManager.this.groups = updatedGroupList;
-          }
+        itemsList.observe(getViewLifecycleOwner(), groups -> {
+          ArrayList<Group> updatedGroupList = (ArrayList<Group>) groups;
+          groupListAdapter.submitList(updatedGroupList);
+          GroupManager.this.groups = updatedGroupList;
         });
         mainActivity.appProgressBar.setVisibility(View.GONE);
       }
@@ -93,61 +87,45 @@ public class GroupManager extends Fragment {
     });
 
     PushDownAnim.setPushDownAnimTo(addNewGroup)
-      .setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          Objects.requireNonNull(getActivity()).getSupportFragmentManager()
-            .beginTransaction()
-            .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
-            .replace(R.id.fragmentContainer, new AddEditGroup(context, null, timerViewModel))
-            .addToBackStack(null)
-            .commit();
-        }
-      });
+      .setOnClickListener(v -> requireActivity().getSupportFragmentManager()
+        .beginTransaction()
+        .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
+        .replace(R.id.fragmentContainer, new AddEditGroup(context, null, timerViewModel))
+        .addToBackStack(null)
+        .commit());
 
-    groupListAdapter.setOnEditClicked(new GroupListAdapter.OnEditClicked() {
-      @Override
-      public void onEditClick(Group group) {
-        Objects.requireNonNull(getActivity()).getSupportFragmentManager()
-          .beginTransaction()
-          .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
-          .replace(R.id.fragmentContainer, new AddEditGroup(context, group, timerViewModel))
-          .addToBackStack(null)
-          .commit();
-      }
-    });
+    groupListAdapter.setOnEditClicked(group -> requireActivity().getSupportFragmentManager()
+      .beginTransaction()
+      .setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right)
+      .replace(R.id.fragmentContainer, new AddEditGroup(context, group, timerViewModel))
+      .addToBackStack(null)
+      .commit());
 
-    groupListAdapter.setOnStartClicked(new GroupListAdapter.OnStartClicked() {
-      @Override
-      public void onStartClicked(Group group) {
-        if(!mainActivity.getIsTimerOn()) {
-          addNewGroup.setEnabled(false);
-          groupListAdapter.isGroupOn = true;
-          LinkGroupTimerViewModel linkGroupTimerViewModel = new LinkGroupTimerViewModel(mainActivity.application);
-          mainActivity.appProgressBar.setVisibility(View.VISIBLE);
-          linkGroupTimerViewModel.getAllByGroup(group.getId(), new DMLOperationsOnMultiple<LinkGroupTimer>() {
-            @Override
-            public void onSuccess(ArrayList<LinkGroupTimer> items) {
-              mainActivity.appProgressBar.setVisibility(View.GONE);
-              if (items != null && items.size() != 0)
-                mainActivity.startGroup(items, new OnGroupFinish() {
-                  @Override
-                  public void setOnGroupFinishListener() {
-                    addNewGroup.setEnabled(true);
-                    groupListAdapter.isGroupOn = false;
-                  }
-                });
-              else
-                showMessage(getString(R.string.no_workouts_present));
-            }
+    groupListAdapter.setOnStartClicked(group -> {
+      if(!mainActivity.getIsTimerOn()) {
+        addNewGroup.setEnabled(false);
+        groupListAdapter.isGroupOn = true;
+        LinkGroupTimerViewModel linkGroupTimerViewModel1 = new LinkGroupTimerViewModel(mainActivity.application);
+        mainActivity.appProgressBar.setVisibility(View.VISIBLE);
+        linkGroupTimerViewModel1.getAllByGroup(group.getId(), new DMLOperationsOnMultiple<>() {
+          @Override
+          public void onSuccess(ArrayList<LinkGroupTimer> items) {
+            mainActivity.appProgressBar.setVisibility(View.GONE);
+            if (items != null && items.size() != 0)
+              mainActivity.startGroup(items, () -> {
+                addNewGroup.setEnabled(true);
+                groupListAdapter.isGroupOn = false;
+              });
+            else
+              showMessage(getString(R.string.no_workouts_present));
+          }
 
-            @Override
-            public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
-              mainActivity.appProgressBar.setVisibility(View.GONE);
-              showMessage(e.getMessage());
-            }
-          });
-        }
+          @Override
+          public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
+            mainActivity.appProgressBar.setVisibility(View.GONE);
+            showMessage(e.getMessage());
+          }
+        });
       }
     });
 
@@ -160,53 +138,45 @@ public class GroupManager extends Fragment {
       @Override
       public void onSwiped(@NonNull final RecyclerView.ViewHolder viewHolder, int direction) {
         mainActivity.appProgressBar.setVisibility(View.VISIBLE);
-        final Group group = groups.get(viewHolder.getAdapterPosition());
-        linkGroupTimerViewModel.getAllByGroup(group.getId(), new DMLOperationsOnMultiple<LinkGroupTimer>() {
+        final Group group = groups.get(viewHolder.getAbsoluteAdapterPosition());
+        linkGroupTimerViewModel.getAllByGroup(group.getId(), new DMLOperationsOnMultiple<>() {
           @Override
           public void onSuccess(final ArrayList<LinkGroupTimer> items) {
-            groupViewModel.delete(group, new DMLOperations<Group>() {
+            groupViewModel.delete(group, new DMLOperations<>() {
               @Override
               public void onSuccess(final Group groupToDelete) {
                 mainActivity.appProgressBar.setVisibility(View.GONE);
                 showMessage(groupToDelete.getGroupName() + getString(R.string.group_deleted));
                 Snackbar.make(groupRecyclerView, groupToDelete.getGroupName(), Snackbar.LENGTH_SHORT)
-                  .setAction(R.string.undo_delete, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                      if (getActivity() != null) {
-                        mainActivity.appProgressBar.setVisibility(View.VISIBLE);
-                        groupViewModel.insert(groupToDelete, new DMLOperations<Group>() {
-                          @Override
-                          public void onSuccess(final Group groupInserted) {
-                            linkGroupTimerViewModel.insert(items, new DMLOperationsOnMultiple<LinkGroupTimer>() {
-                              @Override
-                              public void onSuccess(ArrayList<LinkGroupTimer> items) {
-                                mainActivity.appProgressBar.setVisibility(View.GONE);
-                                showMessage(groupInserted.getGroupName() + getString(R.string.group_added_back));
-                              }
+                  .setAction(R.string.undo_delete, v -> {
+                    if (getActivity() != null) {
+                      mainActivity.appProgressBar.setVisibility(View.VISIBLE);
+                      groupViewModel.insert(groupToDelete, new DMLOperations<>() {
+                        @Override
+                        public void onSuccess(final Group groupInserted) {
+                          linkGroupTimerViewModel.insert(items, new DMLOperationsOnMultiple<>() {
+                            @Override
+                            public void onSuccess(ArrayList<LinkGroupTimer> items1) {
+                              mainActivity.appProgressBar.setVisibility(View.GONE);
+                              showMessage(groupInserted.getGroupName() + getString(R.string.group_added_back));
+                            }
 
-                              @Override
-                              public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
-                                mainActivity.appProgressBar.setVisibility(View.GONE);
-                                showMessage(e.getMessage());
-                              }
-                            });
-                          }
+                            @Override
+                            public void onFailure(ArrayList<LinkGroupTimer> items1, Exception e) {
+                              mainActivity.appProgressBar.setVisibility(View.GONE);
+                              showMessage(e.getMessage());
+                            }
+                          });
+                        }
 
-                          @Override
-                          public void onFailure(Group item, Exception e) {
-                            mainActivity.appProgressBar.setVisibility(View.GONE);
-                            showMessage(e.getMessage());
-                          }
-                        });
-                      } else {
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
-                          @Override
-                          public void run() {
-                            Toast.makeText(mainActivity, R.string.could_not_undo_as_screen_closed, Toast.LENGTH_SHORT).show();
-                          }
-                        });
-                      }
+                        @Override
+                        public void onFailure(Group item, Exception e) {
+                          mainActivity.appProgressBar.setVisibility(View.GONE);
+                          showMessage(e.getMessage());
+                        }
+                      });
+                    } else {
+                      new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(mainActivity, R.string.could_not_undo_as_screen_closed, Toast.LENGTH_SHORT).show());
                     }
                   }).show();
               }
@@ -214,8 +184,8 @@ public class GroupManager extends Fragment {
               @Override
               public void onFailure(Group item, Exception e) {
                 mainActivity.appProgressBar.setVisibility(View.GONE);
-                groups.add(viewHolder.getAdapterPosition(), item);
-                groupListAdapter.notifyItemInserted(viewHolder.getAdapterPosition());
+                groups.add(viewHolder.getAbsoluteAdapterPosition(), item);
+                groupListAdapter.notifyItemInserted(viewHolder.getAbsoluteAdapterPosition());
                 showMessage(e.getMessage());
               }
             });

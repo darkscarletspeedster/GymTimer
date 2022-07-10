@@ -3,7 +3,6 @@ package com.example.gymtimer.dialogs;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
@@ -46,12 +45,9 @@ public class ListDialog extends Dialog {
     selectTimerAdapter.submitList(timers);
 
     PushDownAnim.setPushDownAnimTo(saveBtn)
-      .setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          addEditGroup.addTimersToList(new ArrayList<>(selectTimerAdapter.timersToAdd.values()));
-          dismiss();
-        }
+      .setOnClickListener(v -> {
+        addEditGroup.addTimersToList(new ArrayList<>(selectTimerAdapter.timersToAdd.values()));
+        dismiss();
       });
   }
 }

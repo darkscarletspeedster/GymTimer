@@ -95,8 +95,8 @@ public class AddEditGroup extends Fragment {
       | ItemTouchHelper.START | ItemTouchHelper.END, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
       @Override
       public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-        int fromPos = viewHolder.getAdapterPosition();
-        int toPos = target.getAdapterPosition();
+        int fromPos = viewHolder.getAbsoluteAdapterPosition();
+        int toPos = target.getAbsoluteAdapterPosition();
         Collections.swap(linkGroupTimers, fromPos, toPos);
         linkGroupTimers.get(fromPos).setPosition(fromPos + 1);
         linkGroupTimers.get(toPos).setPosition(toPos + 1);
@@ -116,7 +116,7 @@ public class AddEditGroup extends Fragment {
 
       @Override
       public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-        final int position = viewHolder.getAdapterPosition();
+        final int position = viewHolder.getAbsoluteAdapterPosition();
         final LinkGroupTimer linkGroupTimer = linkGroupTimers.get(position);
         linkGroupTimers.remove(position);
         inGroupTimerAdapter.notifyItemRemoved(position);
@@ -135,35 +135,27 @@ public class AddEditGroup extends Fragment {
           linkGroupTimers.get(i).setPosition(i + 1);
         }
         Snackbar.make(inGroupView, linkGroupTimer.getTimer().getTimerName() , Snackbar.LENGTH_SHORT)
-          .setAction(R.string.undo_delete, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-              if (getActivity() != null) {
-                if (linkGroupTimers.size() == position) {
-                  View view = linearLayoutManager.findViewByPosition(position - 1);
-                  Objects.requireNonNull(view).findViewById(R.id.inGroupTime).setVisibility(View.VISIBLE);
-                }
-
-                linkGroupTimers.add(position, linkGroupTimer);
-                inGroupTimerAdapter.notifyItemInserted(position);
-
-                toDeleteLinkGroupTimers.remove(linkGroupTimer);
-                if (isToBeAddedWithUpdate) {
-                  isToBeAddedWithUpdate = false;
-                  toAddElements.add(linkGroupTimer);
-                }
-                showMessage(linkGroupTimer.getTimer().getTimerName()  + getString(R.string.workout_added_back));
-                for (int i = position; i < linkGroupTimers.size(); i++) {
-                  linkGroupTimers.get(i).setPosition(i + 1);
-                }
-              } else {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                  @Override
-                  public void run() {
-                    Toast.makeText(mainActivity, R.string.could_not_undo_as_screen_closed, Toast.LENGTH_SHORT).show();
-                  }
-                });
+          .setAction(R.string.undo_delete, v -> {
+            if (getActivity() != null) {
+              if (linkGroupTimers.size() == position) {
+                View view = linearLayoutManager.findViewByPosition(position - 1);
+                Objects.requireNonNull(view).findViewById(R.id.inGroupTime).setVisibility(View.VISIBLE);
               }
+
+              linkGroupTimers.add(position, linkGroupTimer);
+              inGroupTimerAdapter.notifyItemInserted(position);
+
+              toDeleteLinkGroupTimers.remove(linkGroupTimer);
+              if (isToBeAddedWithUpdate) {
+                isToBeAddedWithUpdate = false;
+                toAddElements.add(linkGroupTimer);
+              }
+              showMessage(linkGroupTimer.getTimer().getTimerName()  + getString(R.string.workout_added_back));
+              for (int i = position; i < linkGroupTimers.size(); i++) {
+                linkGroupTimers.get(i).setPosition(i + 1);
+              }
+            } else {
+              new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(mainActivity, R.string.could_not_undo_as_screen_closed, Toast.LENGTH_SHORT).show());
             }
           }).show();
       }
@@ -198,7 +190,7 @@ public class AddEditGroup extends Fragment {
         groupNameEdit.setText(group.getGroupName());
         mainActivity.appProgressBar.setVisibility(View.VISIBLE);
         addTimers.setEnabled(false);
-        linkGroupTimerViewModel.getAllByGroup(group.getId(), new DMLOperationsOnMultiple<LinkGroupTimer>() {
+        linkGroupTimerViewModel.getAllByGroup(group.getId(), new DMLOperationsOnMultiple<>() {
           @Override
           public void onSuccess(ArrayList<LinkGroupTimer> items) {
             inGroupTimerAdapter.submitList(items);
@@ -218,130 +210,119 @@ public class AddEditGroup extends Fragment {
     }
 
     PushDownAnim.setPushDownAnimTo(cancelBtn)
-      .setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          Objects.requireNonNull(getActivity()).onBackPressed();
-        }
-      });
+      .setOnClickListener(v -> requireActivity().onBackPressed());
 
     PushDownAnim.setPushDownAnimTo(addTimers)
-      .setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          mainActivity.appProgressBar.setVisibility(View.VISIBLE);
-          timerViewModel.getAllSavedTimers(new DMLOperationsOnMultiple<Timer>() {
-            @Override
-            public void onSuccess(ArrayList<Timer> items) {
-              mainActivity.appProgressBar.setVisibility(View.GONE);
-              ListDialog listDialog = new ListDialog(context, items, AddEditGroup.this);
-              listDialog.show();
-            }
+      .setOnClickListener(v -> {
+        mainActivity.appProgressBar.setVisibility(View.VISIBLE);
+        timerViewModel.getAllSavedTimers(new DMLOperationsOnMultiple<>() {
+          @Override
+          public void onSuccess(ArrayList<Timer> items) {
+            mainActivity.appProgressBar.setVisibility(View.GONE);
+            ListDialog listDialog = new ListDialog(context, items, AddEditGroup.this);
+            listDialog.show();
+          }
 
-            @Override
-            public void onFailure(ArrayList<Timer> items, Exception e) {
-              mainActivity.appProgressBar.setVisibility(View.GONE);
-              showMessage(e.getMessage());
-            }
-          });
-        }
+          @Override
+          public void onFailure(ArrayList<Timer> items, Exception e) {
+            mainActivity.appProgressBar.setVisibility(View.GONE);
+            showMessage(e.getMessage());
+          }
+        });
       });
 
     PushDownAnim.setPushDownAnimTo(saveBtn)
-      .setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          if (groupNameEdit.getText().toString().isEmpty()) {
-            showMessage(getString(R.string.group_name_cannot_be_empty));
-            groupNameEdit.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.border_red, null));
-            return;
-          }
+      .setOnClickListener(v -> {
+        if (groupNameEdit.getText().toString().isEmpty()) {
+          showMessage(getString(R.string.group_name_cannot_be_empty));
+          groupNameEdit.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.border_red, null));
+          return;
+        }
 
-          mainActivity.appProgressBar.setVisibility(View.VISIBLE);
-          group.setGroupName(groupNameEdit.getText().toString());
-          if (isNew) {
-            groupViewModel.insert(group, new DMLOperations<Group>() {
-              @Override
-              public void onSuccess(Group item) {
-                group = item;
-                for (int i = 0; i < linkGroupTimers.size(); i++) {
-                  linkGroupTimers.get(i).setGroup(group);
+        mainActivity.appProgressBar.setVisibility(View.VISIBLE);
+        group.setGroupName(groupNameEdit.getText().toString());
+        if (isNew) {
+          groupViewModel.insert(group, new DMLOperations<>() {
+            @Override
+            public void onSuccess(Group item) {
+              group = item;
+              for (int i = 0; i < linkGroupTimers.size(); i++) {
+                linkGroupTimers.get(i).setGroup(group);
+              }
+              linkGroupTimerViewModel.insert(linkGroupTimers, new DMLOperationsOnMultiple<>() {
+                @Override
+                public void onSuccess(ArrayList<LinkGroupTimer> items) {
+                  mainActivity.appProgressBar.setVisibility(View.GONE);
+                  if (getActivity() != null) {
+                    showMessage(group.getGroupName() + getString(R.string.inserted_successfully));
+                    requireActivity().onBackPressed();
+                  }
                 }
-                linkGroupTimerViewModel.insert(linkGroupTimers, new DMLOperationsOnMultiple<LinkGroupTimer>() {
-                  @Override
-                  public void onSuccess(ArrayList<LinkGroupTimer> items) {
-                    mainActivity.appProgressBar.setVisibility(View.GONE);
-                    if (getActivity() != null) {
-                      showMessage(group.getGroupName() + getString(R.string.inserted_successfully));
-                      Objects.requireNonNull(getActivity()).onBackPressed();
+
+                @Override
+                public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
+                  showMessage(e.getMessage());
+                  mainActivity.appProgressBar.setVisibility(View.GONE);
+                }
+              });
+            }
+
+            @Override
+            public void onFailure(Group item, Exception e) {
+              showMessage(e.getMessage());
+              mainActivity.appProgressBar.setVisibility(View.GONE);
+            }
+          });
+        } else {
+          groupViewModel.update(group, new DMLOperations<>() {
+            @Override
+            public void onSuccess(Group item) {
+              linkGroupTimerViewModel.deleteMultiple(new ArrayList<>(toDeleteLinkGroupTimers), new DMLOperationsOnMultiple<>() {
+                @Override
+                public void onSuccess(ArrayList<LinkGroupTimer> items) {
+                  linkGroupTimerViewModel.update(linkGroupTimers, new DMLOperationsOnMultiple<>() {
+                    @Override
+                    public void onSuccess(ArrayList<LinkGroupTimer> items) {
+                      linkGroupTimerViewModel.insert(new ArrayList<>(toAddElements), new DMLOperationsOnMultiple<>() {
+                        @Override
+                        public void onSuccess(ArrayList<LinkGroupTimer> items) {
+                          mainActivity.appProgressBar.setVisibility(View.GONE);
+                          if (getActivity() != null) {
+                            showMessage(group.getGroupName() + getString(R.string.updated_successfully));
+                            requireActivity().onBackPressed();
+                          }
+                        }
+
+                        @Override
+                        public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
+                          showMessage(e.getMessage());
+                          mainActivity.appProgressBar.setVisibility(View.GONE);
+                        }
+                      });
                     }
-                  }
 
-                  @Override
-                  public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
-                    showMessage(e.getMessage());
-                    mainActivity.appProgressBar.setVisibility(View.GONE);
-                  }
-                });
-              }
+                    @Override
+                    public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
+                      showMessage(e.getMessage());
+                      mainActivity.appProgressBar.setVisibility(View.GONE);
+                    }
+                  });
+                }
 
-              @Override
-              public void onFailure(Group item, Exception e) {
-                showMessage(e.getMessage());
-                mainActivity.appProgressBar.setVisibility(View.GONE);
-              }
-            });
-          } else {
-            groupViewModel.update(group, new DMLOperations<Group>() {
-              @Override
-              public void onSuccess(Group item) {
-                linkGroupTimerViewModel.deleteMultiple(new ArrayList<>(toDeleteLinkGroupTimers), new DMLOperationsOnMultiple<LinkGroupTimer>() {
-                  @Override
-                  public void onSuccess(ArrayList<LinkGroupTimer> items) {
-                    linkGroupTimerViewModel.update(linkGroupTimers, new DMLOperationsOnMultiple<LinkGroupTimer>() {
-                      @Override
-                      public void onSuccess(ArrayList<LinkGroupTimer> items) {
-                        linkGroupTimerViewModel.insert(new ArrayList<>(toAddElements), new DMLOperationsOnMultiple<LinkGroupTimer>() {
-                          @Override
-                          public void onSuccess(ArrayList<LinkGroupTimer> items) {
-                            mainActivity.appProgressBar.setVisibility(View.GONE);
-                            if (getActivity() != null) {
-                              showMessage(group.getGroupName() + getString(R.string.updated_successfully));
-                              Objects.requireNonNull(getActivity()).onBackPressed();
-                            }
-                          }
+                @Override
+                public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
+                  showMessage(e.getMessage());
+                  mainActivity.appProgressBar.setVisibility(View.GONE);
+                }
+              });
+            }
 
-                          @Override
-                          public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
-                            showMessage(e.getMessage());
-                            mainActivity.appProgressBar.setVisibility(View.GONE);
-                          }
-                        });
-                      }
-
-                      @Override
-                      public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
-                        showMessage(e.getMessage());
-                        mainActivity.appProgressBar.setVisibility(View.GONE);
-                      }
-                    });
-                  }
-
-                  @Override
-                  public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
-                    showMessage(e.getMessage());
-                    mainActivity.appProgressBar.setVisibility(View.GONE);
-                  }
-                });
-              }
-
-              @Override
-              public void onFailure(Group item, Exception e) {
-                showMessage(e.getMessage());
-                mainActivity.appProgressBar.setVisibility(View.GONE);
-              }
-            });
-          }
+            @Override
+            public void onFailure(Group item, Exception e) {
+              showMessage(e.getMessage());
+              mainActivity.appProgressBar.setVisibility(View.GONE);
+            }
+          });
         }
       });
 
@@ -378,8 +359,7 @@ public class AddEditGroup extends Fragment {
     }
     inGroupTimerAdapter.notifyItemRangeInserted(n, timers.size());
     if (n != 0) {
-      View view = linearLayoutManager.findViewByPosition(n - 1);
-      Objects.requireNonNull(view).findViewById(R.id.inGroupTime).setVisibility(View.VISIBLE);
+      inGroupTimerAdapter.notifyItemChanged(n - 1);
     }
     showMessage(timers.size() + getString(R.string.timers_added_at_the_end));
   }

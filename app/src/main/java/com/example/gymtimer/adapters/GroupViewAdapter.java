@@ -27,7 +27,7 @@ import java.util.Objects;
 public class GroupViewAdapter extends ListAdapter<LinkGroupTimer, GroupViewAdapter.GroupViewListHolder> {
   private Context context;
 
-  private final static DiffUtil.ItemCallback<LinkGroupTimer> DIFF_TIMER = new DiffUtil.ItemCallback<LinkGroupTimer>() {
+  private final static DiffUtil.ItemCallback<LinkGroupTimer> DIFF_TIMER = new DiffUtil.ItemCallback<>() {
     @Override
     public boolean areItemsTheSame(@NonNull LinkGroupTimer oldItem, @NonNull LinkGroupTimer newItem) {
       return oldItem.getId() == newItem.getId();
@@ -96,24 +96,21 @@ public class GroupViewAdapter extends ListAdapter<LinkGroupTimer, GroupViewAdapt
       timerCard.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.border_white_filled_black, null));
 
       PushDownAnim.setPushDownAnimTo(moreInfoBtn)
-        .setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            int position = getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION) {
-              LinkGroupTimer linkGroupTimer = getItem(position);
-              Drawable drawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.more_info, null);
-              if (linkGroupTimer.isInfoExpanded()) {
-                Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.yellow, null));
-                moreInfoBtn.setBackground(drawable);
-                moreInfoView.setVisibility(View.GONE);
-              } else {
-                Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.white, null));
-                moreInfoBtn.setBackground(drawable);
-                moreInfoView.setVisibility(View.VISIBLE);
-              }
-              linkGroupTimer.setInfoExpanded(!linkGroupTimer.isInfoExpanded());
+        .setOnClickListener(v -> {
+          int position = getAbsoluteAdapterPosition();
+          if (position != RecyclerView.NO_POSITION) {
+            LinkGroupTimer linkGroupTimer = getItem(position);
+            Drawable drawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.more_info, null);
+            if (linkGroupTimer.isInfoExpanded()) {
+              Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.yellow, null));
+              moreInfoBtn.setBackground(drawable);
+              moreInfoView.setVisibility(View.GONE);
+            } else {
+              Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.white, null));
+              moreInfoBtn.setBackground(drawable);
+              moreInfoView.setVisibility(View.VISIBLE);
             }
+            linkGroupTimer.setInfoExpanded(!linkGroupTimer.isInfoExpanded());
           }
         });
     }

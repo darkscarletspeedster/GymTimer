@@ -39,6 +39,6 @@
   <dimen name="size_50">50sp</dimen>
   <dimen name="size_80">80sp</dimen>
   <dimen name="two_digits_text_size_25">40sp</dimen>
-  <dimen name="two_digits_text_size_50">80sp</dimen>
+  <dimen name="two_digits_text_size_50">85sp</dimen>
   <dimen name="four_digits_text_size_25_colon">80sp</dimen>
 </resources>

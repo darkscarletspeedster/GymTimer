@@ -3,13 +3,11 @@ package com.example.gymtimer.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,7 +23,6 @@ import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
 public class GroupListAdapter extends ListAdapter<Group, GroupListAdapter.GroupListHolder> {
   private OnEditClicked onEditClicked;
@@ -36,7 +33,7 @@ public class GroupListAdapter extends ListAdapter<Group, GroupListAdapter.GroupL
   public boolean isGroupOn;
 
 
-  private static final DiffUtil.ItemCallback<Group> DIFF_GROUP = new DiffUtil.ItemCallback<Group>() {
+  private static final DiffUtil.ItemCallback<Group> DIFF_GROUP = new DiffUtil.ItemCallback<>() {
     @Override
     public boolean areItemsTheSame(@NonNull Group oldItem, @NonNull Group newItem) {
       return oldItem.getId() == newItem.getId();
@@ -83,60 +80,51 @@ public class GroupListAdapter extends ListAdapter<Group, GroupListAdapter.GroupL
       startBtn = itemView.findViewById(R.id.startBtn);
       expandGroupBtn = itemView.findViewById(R.id.expandGroupBtn);
 
-      editGroup.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          if(!isGroupOn) {
-            int position = getAdapterPosition();
-            if (onEditClicked != null && position != RecyclerView.NO_POSITION)
-              onEditClicked.onEditClick(getItem(position));
-          }
+      editGroup.setOnClickListener(v -> {
+        if(!isGroupOn) {
+          int position = getAbsoluteAdapterPosition();
+          if (onEditClicked != null && position != RecyclerView.NO_POSITION)
+            onEditClicked.onEditClick(getItem(position));
         }
       });
 
       PushDownAnim.setPushDownAnimTo(startBtn)
-        .setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          int position = getAdapterPosition();
+        .setOnClickListener(v -> {
+          int position = getAbsoluteAdapterPosition();
           if (onStartClicked != null && position != RecyclerView.NO_POSITION) {
             onStartClicked.onStartClicked(getItem(position));
           }
-        }
-      });
+        });
 
       PushDownAnim.setPushDownAnimTo(expandGroupBtn)
-        .setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            if (!isExpanded) {
-              isExpanded = true;
-              int position = getAdapterPosition();
-              if (onEditClicked != null && position != RecyclerView.NO_POSITION) {
-                final Group group = getItem(position);
-                if (linkGroupTimerHashMap.containsKey(group.getId())) {
-                  GroupTimersDialog groupTimersDialog = new GroupTimersDialog(Objects.requireNonNull(groupManager.getContext()),
-                    GroupListAdapter.this, linkGroupTimerHashMap.get(group.getId()));
-                  groupTimersDialog.show();
-                } else {
-                  groupManager.mainActivity.appProgressBar.setVisibility(View.VISIBLE);
-                  LinkGroupTimerViewModel linkGroupTimerViewModel = new LinkGroupTimerViewModel(Objects.requireNonNull(groupManager.getActivity()).getApplication());
-                  linkGroupTimerViewModel.getAllByGroup(group.getId(), new DMLOperationsOnMultiple<LinkGroupTimer>() {
-                    @Override
-                    public void onSuccess(ArrayList<LinkGroupTimer> items) {
-                      linkGroupTimerHashMap.put(group.getId(), items);
-                      groupManager.mainActivity.appProgressBar.setVisibility(View.GONE);
-                      GroupTimersDialog groupTimersDialog = new GroupTimersDialog(Objects.requireNonNull(groupManager.getContext()), GroupListAdapter.this, items);
-                      groupTimersDialog.show();
-                    }
+        .setOnClickListener(v -> {
+          if (!isExpanded) {
+            isExpanded = true;
+            int position = getAbsoluteAdapterPosition();
+            if (onEditClicked != null && position != RecyclerView.NO_POSITION) {
+              final Group group = getItem(position);
+              if (linkGroupTimerHashMap.containsKey(group.getId())) {
+                GroupTimersDialog groupTimersDialog = new GroupTimersDialog(groupManager.requireContext(),
+                  GroupListAdapter.this, linkGroupTimerHashMap.get(group.getId()));
+                groupTimersDialog.show();
+              } else {
+                groupManager.mainActivity.appProgressBar.setVisibility(View.VISIBLE);
+                LinkGroupTimerViewModel linkGroupTimerViewModel = new LinkGroupTimerViewModel(groupManager.requireActivity().getApplication());
+                linkGroupTimerViewModel.getAllByGroup(group.getId(), new DMLOperationsOnMultiple<>() {
+                  @Override
+                  public void onSuccess(ArrayList<LinkGroupTimer> items) {
+                    linkGroupTimerHashMap.put(group.getId(), items);
+                    groupManager.mainActivity.appProgressBar.setVisibility(View.GONE);
+                    GroupTimersDialog groupTimersDialog = new GroupTimersDialog(groupManager.requireContext(), GroupListAdapter.this, items);
+                    groupTimersDialog.show();
+                  }
 
-                    @Override
-                    public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
-                      groupManager.mainActivity.appProgressBar.setVisibility(View.GONE);
-                      groupManager.showMessage(e.getMessage());
-                    }
-                  });
-                }
+                  @Override
+                  public void onFailure(ArrayList<LinkGroupTimer> items, Exception e) {
+                    groupManager.mainActivity.appProgressBar.setVisibility(View.GONE);
+                    groupManager.showMessage(e.getMessage());
+                  }
+                });
               }
             }
           }

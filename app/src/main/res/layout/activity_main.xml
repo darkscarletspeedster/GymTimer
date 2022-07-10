@@ -240,8 +240,22 @@
           android:padding="@dimen/size_5"
           android:enabled="false"
           android:textSize="@dimen/size_20"
-          android:textColor="@color/colorAccent"/>
+          android:textColor="@color/colorAccent"
+          />
       </com.google.android.material.textfield.TextInputLayout>
+
+      <ImageButton
+        android:layout_width="@dimen/expand_size"
+        android:layout_height="@dimen/expand_size"
+        android:id="@+id/expandGroupBtn"
+        android:background="@drawable/expand_group"
+        android:contentDescription="@string/expand_group_for_timer_list"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="@dimen/size_20"
+        android:layout_marginTop="@dimen/size_10"
+        android:layout_below="@+id/timerNameInClockTextContainer"
+        android:visibility="gone"
+        />
 
       <TextView
         android:layout_width="wrap_content"

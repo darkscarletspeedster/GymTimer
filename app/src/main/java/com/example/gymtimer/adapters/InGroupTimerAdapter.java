@@ -1,10 +1,8 @@
 package com.example.gymtimer.adapters;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -26,12 +24,13 @@ import com.thekhaeng.pushdownanim.PushDownAnim;
 
 import java.util.Locale;
 import java.util.Objects;
+
 public class InGroupTimerAdapter extends ListAdapter<LinkGroupTimer, InGroupTimerAdapter.InGroupTimerListHolder> {
   private final Context context;
   private RecyclerView inGroupView;
   private ItemTouchHelper itemTouchHelper;
 
-  private final static DiffUtil.ItemCallback<LinkGroupTimer> DIFF_TIMER = new DiffUtil.ItemCallback<LinkGroupTimer>() {
+  private final static DiffUtil.ItemCallback<LinkGroupTimer> DIFF_TIMER = new DiffUtil.ItemCallback<>() {
     @Override
     public boolean areItemsTheSame(@NonNull LinkGroupTimer oldItem, @NonNull LinkGroupTimer newItem) {
       return oldItem.getId() == newItem.getId();
@@ -113,95 +112,77 @@ public class InGroupTimerAdapter extends ListAdapter<LinkGroupTimer, InGroupTime
       inGroupTimeSec = itemView.findViewById(R.id.inGroupTimeSec);
 
       PushDownAnim.setPushDownAnimTo(moreInfoBtn)
-        .setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            int position = getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION) {
-              LinkGroupTimer linkGroupTimer = getItem(position);
-              Drawable drawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.more_info, null);
-              if (linkGroupTimer.isInfoExpanded()) {
-                Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.yellow, null));
-                moreInfoBtn.setBackground(drawable);
-                moreInfoView.setVisibility(View.GONE);
-              } else {
-                Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.veryLightBlack, null));
-                moreInfoBtn.setBackground(drawable);
-                inGroupTimerLayout.setVisibility(View.GONE);
-                linkGroupTimer.setInGroupTimeEditOn(false);
-                moreInfoView.setVisibility(View.VISIBLE);
-              }
-              linkGroupTimer.setInfoExpanded(!linkGroupTimer.isInfoExpanded());
-            }
-          }
-        });
-
-      inGroupTime.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          int position = getAdapterPosition();
+        .setOnClickListener(v -> {
+          int position = getAbsoluteAdapterPosition();
           if (position != RecyclerView.NO_POSITION) {
-            final LinkGroupTimer linkGroupTimer = getItem(position);
-
-            if (linkGroupTimer.isInGroupTimeEditOn()) {
-              inGroupTimerLayout.setVisibility(View.GONE);
-            } else {
-              int min = Integer.parseInt(linkGroupTimer.getInGroupTime().substring(0, 2));
-              int sec = Integer.parseInt(linkGroupTimer.getInGroupTime().substring(3));
-
-              inGroupTimeMin.setMinValue(0);
-              inGroupTimeMin.setMaxValue(59);
-              inGroupTimeMin.setValue(min);
-              inGroupTimeSec.setMinValue(0);
-              inGroupTimeSec.setMaxValue(59);
-              inGroupTimeSec.setValue(sec);
-              Drawable drawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.more_info, null);
+            LinkGroupTimer linkGroupTimer = getItem(position);
+            Drawable drawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.more_info, null);
+            if (linkGroupTimer.isInfoExpanded()) {
               Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.yellow, null));
               moreInfoBtn.setBackground(drawable);
               moreInfoView.setVisibility(View.GONE);
-              linkGroupTimer.setInfoExpanded(false);
-              inGroupTimerLayout.setVisibility(View.VISIBLE);
-
-              inGroupTimeMin.setOnScrollListener(new NumberPicker.OnScrollListener() {
-                @Override
-                public void onScrollStateChange(NumberPicker view, int scrollState) {
-                  if (scrollState == SCROLL_STATE_FLING || scrollState == SCROLL_STATE_TOUCH_SCROLL)
-                    itemTouchHelper.attachToRecyclerView(null);
-                  else
-                    itemTouchHelper.attachToRecyclerView(inGroupView);
-                }
-              });
-              inGroupTimeMin.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-                @Override
-                public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                  String time = String.format(Locale.ENGLISH, "%02d", newVal) + inGroupTime.getText().toString().substring(2);
-                  inGroupTime.setText(time);
-                  linkGroupTimer.setInGroupTime(time);
-                  itemTouchHelper.attachToRecyclerView(inGroupView);
-                }
-              });
-
-              inGroupTimeSec.setOnScrollListener(new NumberPicker.OnScrollListener() {
-                @Override
-                public void onScrollStateChange(NumberPicker view, int scrollState) {
-                  if (scrollState == SCROLL_STATE_FLING || scrollState == SCROLL_STATE_TOUCH_SCROLL)
-                    itemTouchHelper.attachToRecyclerView(null);
-                  else
-                    itemTouchHelper.attachToRecyclerView(inGroupView);
-                }
-              });
-              inGroupTimeSec.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-                @Override
-                public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                  String time = inGroupTime.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
-                  inGroupTime.setText(time);
-                  linkGroupTimer.setInGroupTime(time);
-                  itemTouchHelper.attachToRecyclerView(inGroupView);
-                }
-              });
+            } else {
+              Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.veryLightBlack, null));
+              moreInfoBtn.setBackground(drawable);
+              inGroupTimerLayout.setVisibility(View.GONE);
+              linkGroupTimer.setInGroupTimeEditOn(false);
+              moreInfoView.setVisibility(View.VISIBLE);
             }
-            linkGroupTimer.setInGroupTimeEditOn(!linkGroupTimer.isInGroupTimeEditOn());
+            linkGroupTimer.setInfoExpanded(!linkGroupTimer.isInfoExpanded());
           }
+        });
+
+      inGroupTime.setOnClickListener(v -> {
+        int position = getAbsoluteAdapterPosition();
+        if (position != RecyclerView.NO_POSITION) {
+          final LinkGroupTimer linkGroupTimer = getItem(position);
+
+          if (linkGroupTimer.isInGroupTimeEditOn()) {
+            inGroupTimerLayout.setVisibility(View.GONE);
+          } else {
+            int min = Integer.parseInt(linkGroupTimer.getInGroupTime().substring(0, 2));
+            int sec = Integer.parseInt(linkGroupTimer.getInGroupTime().substring(3));
+
+            inGroupTimeMin.setMinValue(0);
+            inGroupTimeMin.setMaxValue(59);
+            inGroupTimeMin.setValue(min);
+            inGroupTimeSec.setMinValue(0);
+            inGroupTimeSec.setMaxValue(59);
+            inGroupTimeSec.setValue(sec);
+            Drawable drawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.more_info, null);
+            Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.yellow, null));
+            moreInfoBtn.setBackground(drawable);
+            moreInfoView.setVisibility(View.GONE);
+            linkGroupTimer.setInfoExpanded(false);
+            inGroupTimerLayout.setVisibility(View.VISIBLE);
+
+            inGroupTimeMin.setOnScrollListener((view, scrollState) -> {
+              if (scrollState == NumberPicker.OnScrollListener.SCROLL_STATE_FLING || scrollState == NumberPicker.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL)
+                itemTouchHelper.attachToRecyclerView(null);
+              else
+                itemTouchHelper.attachToRecyclerView(inGroupView);
+            });
+            inGroupTimeMin.setOnValueChangedListener((picker, oldVal, newVal) -> {
+              String time = String.format(Locale.ENGLISH, "%02d", newVal) + inGroupTime.getText().toString().substring(2);
+              inGroupTime.setText(time);
+              linkGroupTimer.setInGroupTime(time);
+              itemTouchHelper.attachToRecyclerView(inGroupView);
+            });
+
+            inGroupTimeSec.setOnScrollListener((view, scrollState) -> {
+              if (scrollState == NumberPicker.OnScrollListener.SCROLL_STATE_FLING || scrollState == NumberPicker.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL)
+                itemTouchHelper.attachToRecyclerView(null);
+              else
+                itemTouchHelper.attachToRecyclerView(inGroupView);
+            });
+            inGroupTimeSec.setOnValueChangedListener((picker, oldVal, newVal) -> {
+              String time = inGroupTime.getText().toString().substring(0, 3) + String.format(Locale.ENGLISH, "%02d", newVal);
+              inGroupTime.setText(time);
+              linkGroupTimer.setInGroupTime(time);
+              itemTouchHelper.attachToRecyclerView(inGroupView);
+            });
+          }
+          linkGroupTimer.setInGroupTimeEditOn(!linkGroupTimer.isInGroupTimeEditOn());
         }
       });
     }

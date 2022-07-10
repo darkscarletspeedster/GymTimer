@@ -28,152 +28,78 @@ public class LinkGroupTimerRepository {
   }
 
   public void insert(final ArrayList<LinkGroupTimer> linkGroupTimers, final DMLOperationsOnMultiple<LinkGroupTimer> dmlOperationsOnMultiple) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          linkGroupTimerDao.insert(linkGroupTimers);
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              dmlOperationsOnMultiple.onSuccess(linkGroupTimers);
-            }
-          });
-        } catch (final Exception e) {
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              if (Objects.requireNonNull(e.getMessage()).contains("UNIQUE"))
-                dmlOperationsOnMultiple.onFailure(linkGroupTimers, new Exception(application.getApplicationContext().getResources().getString(R.string.linkgrouptimer_already_present)));
-              else
-                dmlOperationsOnMultiple.onFailure(linkGroupTimers, e);
-            }
-          });
-        }
+    new Thread(() -> {
+      try {
+        linkGroupTimerDao.insert(linkGroupTimers);
+        handler.post(() -> dmlOperationsOnMultiple.onSuccess(linkGroupTimers));
+      } catch (final Exception e) {
+        handler.post(() -> {
+          if (Objects.requireNonNull(e.getMessage()).contains("UNIQUE"))
+            dmlOperationsOnMultiple.onFailure(linkGroupTimers, new Exception(application.getApplicationContext().getResources().getString(R.string.linkgrouptimer_already_present)));
+          else
+            dmlOperationsOnMultiple.onFailure(linkGroupTimers, e);
+        });
       }
     }).start();
   }
 
   public void update(final ArrayList<LinkGroupTimer> linkGroupTimers, final DMLOperationsOnMultiple<LinkGroupTimer> dmlOperationsOnMultiple) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          linkGroupTimerDao.update(linkGroupTimers);
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              dmlOperationsOnMultiple.onSuccess(linkGroupTimers);
-            }
-          });
-        } catch (final Exception e) {
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
+    new Thread(() -> {
+      try {
+        linkGroupTimerDao.update(linkGroupTimers);
+        handler.post(() -> dmlOperationsOnMultiple.onSuccess(linkGroupTimers));
+      } catch (final Exception e) {
+        handler.post(() -> {
 
-              if (Objects.requireNonNull(e.getMessage()).contains("UNIQUE"))
-                dmlOperationsOnMultiple.onFailure(linkGroupTimers, new Exception(application.getApplicationContext().getResources().getString(R.string.linkgrouptimer_already_present)));
-              else
-                dmlOperationsOnMultiple.onFailure(linkGroupTimers, e);
-            }
-          });
-        }
+          if (Objects.requireNonNull(e.getMessage()).contains("UNIQUE"))
+            dmlOperationsOnMultiple.onFailure(linkGroupTimers, new Exception(application.getApplicationContext().getResources().getString(R.string.linkgrouptimer_already_present)));
+          else
+            dmlOperationsOnMultiple.onFailure(linkGroupTimers, e);
+        });
       }
     }).start();
   }
 
   public void getAllByGroup(final int groupId, final DMLOperationsOnMultiple<LinkGroupTimer> dmlOperationsOnMultiple) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          final List<LinkGroupTimer> linkGroupTimers = linkGroupTimerDao.getAllByGroup(groupId);
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              dmlOperationsOnMultiple.onSuccess((ArrayList<LinkGroupTimer>) linkGroupTimers);
-            }
-          });
-        } catch (final Exception e) {
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              dmlOperationsOnMultiple.onFailure(null, e);
-            }
-          });
-        }
+    new Thread(() -> {
+      try {
+        final List<LinkGroupTimer> linkGroupTimers = linkGroupTimerDao.getAllByGroup(groupId);
+        handler.post(() -> dmlOperationsOnMultiple.onSuccess((ArrayList<LinkGroupTimer>) linkGroupTimers));
+      } catch (final Exception e) {
+        handler.post(() -> dmlOperationsOnMultiple.onFailure(null, e));
       }
     }).start();
   }
 
   public void delete(final LinkGroupTimer linkGroupTimer, final DMLOperations<LinkGroupTimer> dmlOperations) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          linkGroupTimerDao.delete(linkGroupTimer);
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              dmlOperations.onSuccess(linkGroupTimer);
-            }
-          });
-        } catch (final Exception e) {
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              dmlOperations.onFailure(linkGroupTimer, e);
-            }
-          });
-        }
+    new Thread(() -> {
+      try {
+        linkGroupTimerDao.delete(linkGroupTimer);
+        handler.post(() -> dmlOperations.onSuccess(linkGroupTimer));
+      } catch (final Exception e) {
+        handler.post(() -> dmlOperations.onFailure(linkGroupTimer, e));
       }
     }).start();
   }
 
   public void deleteMultiple(final ArrayList<LinkGroupTimer> linkGroupTimers, final DMLOperationsOnMultiple<LinkGroupTimer> dmlOperationsOnMultiple) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          linkGroupTimerDao.deleteMultiple(linkGroupTimers);
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              dmlOperationsOnMultiple.onSuccess(linkGroupTimers);
-            }
-          });
-        } catch (final Exception e) {
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              dmlOperationsOnMultiple.onFailure(linkGroupTimers, e);
-            }
-          });
-        }
+    new Thread(() -> {
+      try {
+        linkGroupTimerDao.deleteMultiple(linkGroupTimers);
+        handler.post(() -> dmlOperationsOnMultiple.onSuccess(linkGroupTimers));
+      } catch (final Exception e) {
+        handler.post(() -> dmlOperationsOnMultiple.onFailure(linkGroupTimers, e));
       }
     }).start();
   }
 
   public void getAllByTimer(final int timerId, final DMLOperationsOnMultiple<LinkGroupTimer> dmlOperationsOnMultiple) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          final List<LinkGroupTimer> linkGroupTimers = linkGroupTimerDao.getAllByTimer(timerId);
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              dmlOperationsOnMultiple.onSuccess((ArrayList<LinkGroupTimer>) linkGroupTimers);
-            }
-          });
-        } catch (final Exception e) {
-          handler.post(new Runnable() {
-            @Override
-            public void run() {
-              dmlOperationsOnMultiple.onFailure(null, e);
-            }
-          });
-        }
+    new Thread(() -> {
+      try {
+        final List<LinkGroupTimer> linkGroupTimers = linkGroupTimerDao.getAllByTimer(timerId);
+        handler.post(() -> dmlOperationsOnMultiple.onSuccess((ArrayList<LinkGroupTimer>) linkGroupTimers));
+      } catch (final Exception e) {
+        handler.post(() -> dmlOperationsOnMultiple.onFailure(null, e));
       }
     }).start();
   }

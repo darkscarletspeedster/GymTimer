@@ -28,7 +28,7 @@ public class SelectTimerAdapter extends ListAdapter<Timer, SelectTimerAdapter.Ti
   private Context context;
   public HashMap<Integer, Timer> timersToAdd;
 
-  private static final DiffUtil.ItemCallback<Timer> DIFF_TIMER = new DiffUtil.ItemCallback<Timer>() {
+  private static final DiffUtil.ItemCallback<Timer> DIFF_TIMER = new DiffUtil.ItemCallback<>() {
     @Override
     public boolean areItemsTheSame(@NonNull Timer oldItem, @NonNull Timer newItem) {
       return oldItem.getId() == newItem.getId();
@@ -92,42 +92,36 @@ public class SelectTimerAdapter extends ListAdapter<Timer, SelectTimerAdapter.Ti
       timerCard = itemView.findViewById(R.id.timerCard);
 
       PushDownAnim.setPushDownAnimTo(moreInfoBtn)
-        .setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            int position = getAdapterPosition();
-            if (position != RecyclerView.NO_POSITION) {
-              Timer timer = getItem(position);
-              Drawable drawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.more_info, null);
-              if (timer.isExpanded()) {
-                Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.yellow, null));
-                moreInfoBtn.setBackground(drawable);
-                moreInfoView.setVisibility(View.GONE);
-              } else {
-                Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.white, null));
-                moreInfoBtn.setBackground(drawable);
-                moreInfoView.setVisibility(View.VISIBLE);
-              }
-              timer.setIsExpanded(!timer.isExpanded());
+        .setOnClickListener(v -> {
+          int position = getAbsoluteAdapterPosition();
+          if (position != RecyclerView.NO_POSITION) {
+            Timer timer = getItem(position);
+            Drawable drawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.more_info, null);
+            if (timer.isExpanded()) {
+              Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.yellow, null));
+              moreInfoBtn.setBackground(drawable);
+              moreInfoView.setVisibility(View.GONE);
+            } else {
+              Objects.requireNonNull(drawable).setTint(ResourcesCompat.getColor(context.getResources(), R.color.white, null));
+              moreInfoBtn.setBackground(drawable);
+              moreInfoView.setVisibility(View.VISIBLE);
             }
+            timer.setIsExpanded(!timer.isExpanded());
           }
         });
 
-      timerCard.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          int position = getAdapterPosition();
-          if (position != RecyclerView.NO_POSITION) {
-            Timer timer = getItem(position);
-            if (timer.isSelected()) {
-              timerCard.setCardBackgroundColor(ResourcesCompat.getColor(context.getResources(), R.color.black, null));
-              timersToAdd.remove(timer.getId());
-            } else {
-              timerCard.setCardBackgroundColor(ResourcesCompat.getColor(context.getResources(), R.color.red, null));
-              timersToAdd.put(timer.getId(), timer);
-            }
-            timer.setIsSelected(!timer.isSelected());
+      timerCard.setOnClickListener(v -> {
+        int position = getAbsoluteAdapterPosition();
+        if (position != RecyclerView.NO_POSITION) {
+          Timer timer = getItem(position);
+          if (timer.isSelected()) {
+            timerCard.setCardBackgroundColor(ResourcesCompat.getColor(context.getResources(), R.color.black, null));
+            timersToAdd.remove(timer.getId());
+          } else {
+            timerCard.setCardBackgroundColor(ResourcesCompat.getColor(context.getResources(), R.color.red, null));
+            timersToAdd.put(timer.getId(), timer);
           }
+          timer.setIsSelected(!timer.isSelected());
         }
       });
     }
