@@ -68,6 +68,8 @@ public class GroupViewAdapter extends ListAdapter<LinkGroupTimer, GroupViewAdapt
       holder.alert2Text.setText(currentTimer.getInWorkoutAlert2());
       if (colorChangePosition != -1 && colorChangePosition == position)
         holder.timerCard.setBackgroundColor(ResourcesCompat.getColor(context.getResources(), R.color.red, null));
+      else
+        holder.timerCard.setBackground(ResourcesCompat.getDrawable(context.getResources(), R.drawable.border_white_filled_black, null));
     }
   }
 

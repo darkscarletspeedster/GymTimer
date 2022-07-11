@@ -36,7 +36,7 @@
     android:layout_height="wrap_content"
     android:id="@+id/saveBtn"
     android:text="@string/save"
-    android:background="@drawable/light_green_filled_bg"
+    android:background="@drawable/red_filled_bg"
     android:textColor="@color/white"
     android:textSize="@dimen/size_15"
     android:layout_marginTop="@dimen/size_20"

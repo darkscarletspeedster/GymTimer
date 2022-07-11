@@ -171,6 +171,7 @@ public class AddEditGroup extends Fragment {
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
       }
     };
+
     itemTouchHelper = new ItemTouchHelper(simpleCallback);
 
     inGroupView.setLayoutManager(linearLayoutManager);
@@ -280,6 +281,11 @@ public class AddEditGroup extends Fragment {
               linkGroupTimerViewModel.deleteMultiple(new ArrayList<>(toDeleteLinkGroupTimers), new DMLOperationsOnMultiple<>() {
                 @Override
                 public void onSuccess(ArrayList<LinkGroupTimer> items) {
+                  for (LinkGroupTimer item : linkGroupTimers ) {
+                    if (item.getGroup().getId() == group.getId()){
+                      item.setGroup(group);
+                    }
+                  }
                   linkGroupTimerViewModel.update(linkGroupTimers, new DMLOperationsOnMultiple<>() {
                     @Override
                     public void onSuccess(ArrayList<LinkGroupTimer> items) {

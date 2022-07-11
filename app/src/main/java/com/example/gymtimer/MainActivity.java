@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
   private final Object lockObjectGroup = new Object();
   private PauseModel pauseModel;
   private ImageButton expandGroupBtn;
+  private GroupTimersDialog groupTimersDialog;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -287,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
       groupNameInClockText.setText(group.getGroupName());
       navLayout.setVisibility(View.GONE);
 
-      GroupTimersDialog groupTimersDialog = new GroupTimersDialog(mainListTab.getActivity(), null, linkGroupTimers);
+      groupTimersDialog = new GroupTimersDialog(mainListTab.getActivity(), null, linkGroupTimers);
 
       PushDownAnim.setPushDownAnimTo(expandGroupBtn).setOnClickListener(v -> {
         groupTimersDialog.show();
@@ -318,13 +319,13 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
               new Handler(getMainLooper()).post(() -> {
                 nextTimerNameInClockTextContainer.setVisibility(View.VISIBLE);
                 nextTimerNameInClockText.setText(nextTimer.getTimerName());
-                groupTimersDialog.colorChangePosition = finalI;
+                groupTimersDialog.colorChangePosition.setValue(finalI);
               });
             } else {
               new Handler(getMainLooper()).post(() -> {
                 nextTimerNameInClockTextContainer.setVisibility(View.GONE);
                 timerNameInClockTextContainer.setHint("Last Timer");
-                groupTimersDialog.colorChangePosition = finalI;
+                groupTimersDialog.colorChangePosition.setValue(finalI);
               });
             }
             synchronized (lockObjectGroup) {
@@ -604,6 +605,7 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
     pauseBtn.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.border_primary_dark, null));
     pauseModel = null;
     expandGroupBtn.setVisibility(View.GONE);
+    groupTimersDialog.cancel();
 
     if (countDownTimer != null) {
       countDownTimer.cancel();
