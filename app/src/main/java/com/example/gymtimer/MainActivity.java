@@ -605,7 +605,8 @@ public class MainActivity extends AppCompatActivity implements View.OnLongClickL
     pauseBtn.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.border_primary_dark, null));
     pauseModel = null;
     expandGroupBtn.setVisibility(View.GONE);
-    groupTimersDialog.cancel();
+    if (groupTimersDialog != null)
+      groupTimersDialog.cancel();
 
     if (countDownTimer != null) {
       countDownTimer.cancel();
